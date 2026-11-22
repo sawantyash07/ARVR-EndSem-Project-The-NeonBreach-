@@ -716,7 +716,7 @@ Switching modes: main-menu buttons, pause menu → **SWITCH MODE**, the results 
 
 ## 4. Controls
 
-**Keyboard + mouse** (rebindable in Settings → Controls): WASD move · mouse look · Shift sprint · Ctrl/C crouch, sprint + crouch to slide · Space jump · Q dash · LMB fire · RMB aim · R reload · mouse wheel (or 1/2/3, see [Known issues](#9-known-issues-and-limitations)) weapons · G grenade · V melee · H medkit · F flashlight · Esc pause · F1 help · F3 FPS · **F4 performance panel** · F12 screenshot. In the shop: 1-8 buy, Enter continue.
+**Keyboard + mouse** (rebindable in Settings → Controls): WASD move · mouse look · Shift sprint · Ctrl/C crouch, sprint + crouch to slide · Space jump · Q dash · LMB fire · RMB aim · R reload · 1/2/3 or mouse wheel weapons · G grenade · V melee · H medkit · F flashlight · Esc pause · F1 help · F3 FPS · **F4 performance panel** · F12 screenshot. In the shop: 1-8 buy, Enter continue.
 
 **Gamepad:** L-stick move · R-stick look · RT fire · LT aim · A jump · B crouch/slide · X reload · Y / D-pad weapons · LB dash · RB grenade · L3 sprint · R3 melee · D-pad up flashlight · D-pad down medkit · Start pause / leave shop.
 
@@ -792,11 +792,11 @@ Rebuilding the generated levels: **Neon Breach → Rat Shooter → Build Rat Sho
 - **Farm Sniper** was play-tested in the Editor with queued Input System events (scope, shots, a 67 m kill, reload, third person) plus scripted checks of rat fleeing, pause, victory and game over.
 - **Rat Shooter** was play-tested in the Editor through scripted calls: main menu → RAT SHOOTER (fade) → title → countdown → hits and misses, reload, aim down sights, pause, how to play, level clear, next level, game over, victory, back to the main menu. It compiles with no errors or warnings and runs at about 340 FPS in the Editor.
 - **README screenshot session (22 Nov 2026):** every game was played again in the Editor (Play mode, 1920×1080) with real Input System keyboard/mouse events. Results from that session: shooter wave 2 reached with 21 kills; archery 30/30 hits with 27 bullseyes; parachute landed 36 m from the pad; Rat Shooter level 1 cleared with 3 stars and all 5 levels won; Farm Sniper mission complete with 15/15 rats at 88 % accuracy.
+- **Number-key fix (22 Nov 2026):** `DesktopInput.ToKey` used `Key.Digit0 + n`, but the Input System's `Key` enum puts `Digit0` after `Digit9`, so 1/2/3 were read as Shift/Alt (this also broke the shop's 1-8 quick-buy keys and Farm Sniper's 1/2/3 difficulty keys). After the fix, Input System key events in Play mode switched weapons as expected: 2 → rifle, 3 → scatter cannon, 1 → pistol, and Shift no longer changes weapon.
 - **Not tested on hardware:** VR, hand tracking, haptics and mixed reality need a headset (a Quest for passthrough) and were only compile-checked. Gamepad / split-screen co-op were exercised without a physical gamepad.
 
 ## 9. Known issues and limitations
 
-- **Number keys 1/2/3 do not select weapons with the Input System backend.** `DesktopInput.ToKey` maps `KeyCode.Alpha0-9` with `Key.Digit0 + n`, but in the Input System `Key` enum `Digit0` comes *after* `Digit9`, so 1/2/3 resolve to LeftShift/RightShift/LeftAlt. Pressing Shift to sprint therefore also selects weapon slot 1. The mouse wheel and the gamepad switch weapons correctly. Fix: map `Alpha1-9` to `Key.Digit1 + (n - 1)` and `Alpha0` to `Key.Digit0`.
 - VR, hand tracking, haptics and passthrough are implemented but unverified on a headset (see [Testing](#8-testing)).
 - Rat Shooter is desktop only. The VR menus do not list it.
 - Farm Sniper has no main-menu button; open it from the editor menu (its title screen links back to Neon Breach).

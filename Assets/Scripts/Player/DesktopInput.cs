@@ -25,7 +25,9 @@ namespace NeonBreach
             Key k;
             if (keyMap.TryGetValue(kc, out k)) return k;
             k = Key.None;
-            if (kc >= KeyCode.Alpha0 && kc <= KeyCode.Alpha9) k = Key.Digit0 + (kc - KeyCode.Alpha0);
+            // the Input System's Key enum orders the digits 1..9 then 0 (Digit0 comes after Digit9)
+            if (kc == KeyCode.Alpha0) k = Key.Digit0;
+            else if (kc >= KeyCode.Alpha1 && kc <= KeyCode.Alpha9) k = Key.Digit1 + (kc - KeyCode.Alpha1);
             else if (kc >= KeyCode.Keypad0 && kc <= KeyCode.Keypad9) k = Key.Numpad0 + (kc - KeyCode.Keypad0);
             else
             {
