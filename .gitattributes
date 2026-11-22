@@ -1,0 +1,37 @@
+# Normalise line endings for text files
+* text=auto
+
+# Code
+*.cs       text diff=csharp
+*.shader   text
+*.cginc    text
+*.hlsl     text
+*.json     text
+*.md       text
+
+# Unity YAML (scenes, prefabs, assets, meta) - keep LF as Unity writes them; collapse in diffs
+*.unity    text eol=lf linguist-generated
+*.prefab   text eol=lf linguist-generated
+*.asset    text eol=lf linguist-generated
+*.mat      text eol=lf linguist-generated
+*.meta     text eol=lf linguist-generated
+*.lighting text eol=lf linguist-generated
+*.controller text eol=lf linguist-generated
+*.anim     text eol=lf linguist-generated
+
+# Binary files
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.psd  binary
+*.tga  binary
+*.exr  binary
+*.fbx  binary
+*.wav  binary
+*.mp3  binary
+*.ogg  binary
+*.ttf  binary
+*.otf  binary
+*.pdf  binary
+*.docx binary
