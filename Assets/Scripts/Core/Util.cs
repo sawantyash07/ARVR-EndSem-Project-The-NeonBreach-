@@ -5,6 +5,15 @@ namespace NeonBreach
     /// <summary>Small helpers shared by the procedural builders (work in edit mode and play mode).</summary>
     public static class Util
     {
+        /// <summary>
+        /// Set a camera's field of view, except while an XR headset renders it in stereo: the lens fixes the FOV there
+        /// and Unity warns "Cannot set field of view on camera ... while VR is enabled".
+        /// </summary>
+        public static void SetFov(Camera cam, float fov)
+        {
+            if (cam != null && !cam.stereoEnabled) cam.fieldOfView = fov;
+        }
+
         /// <summary>Create a primitive as a child of parent. Colliders are stripped unless keepCollider is true.</summary>
         public static GameObject Part(Transform parent, PrimitiveType type, string name, Vector3 pos, Vector3 euler,
                                       Vector3 scale, string material, bool keepCollider = false)

@@ -314,7 +314,7 @@ namespace NeonBreach
                 if (p.weapons.holder != null) p.weapons.holder.gameObject.SetActive(true);
             }
             if (p.vr != null) p.vr.WristOverride = null;
-            if (p.cam != null) p.cam.fieldOfView = GameSettings.Fov;
+            Util.SetFov(p.cam, GameSettings.Fov);
         }
 
         /// <summary>A world-space text label (distance signs etc.) using Unity's built-in font - no font assets.</summary>

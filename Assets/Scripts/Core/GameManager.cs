@@ -255,7 +255,7 @@ namespace NeonBreach
             ClearLooseObjects();
             SetupPlayers(false);
             if (Player != null) Player.ResetPlayer(playerSpawn);
-            if (Hud != null) Hud.ResetUi();
+            if (Hud != null) { Hud.ResetUi(); Hud.FadeIn(0.5f); }
             Haptics.StopAll();
             SetCursor(false);
         }
@@ -276,6 +276,7 @@ namespace NeonBreach
             Time.timeScale = 1f;
             SetCursor(!VrActive);
             Waves.Begin();
+            if (Hud != null) Hud.FadeIn(0.6f);
             Sfx.Play2D(SfxId.Click, 0.8f);
             if (CoOpRun && GamepadInput.Count == 0 && Hud != null)
                 Hud.Banner(Loc.T("CO-OP"), Loc.T("Connect a gamepad for player 2"));
@@ -293,6 +294,7 @@ namespace NeonBreach
             State = GameState.Playing;
             Time.timeScale = 1f;
             SetCursor(!VrActive);
+            if (Hud != null) Hud.FadeIn(0.6f);
             Tutorial.Begin(Player);
         }
 
@@ -425,6 +427,7 @@ namespace NeonBreach
             Time.timeScale = 1f;
             Haptics.StopAll();
             SetCursor(!VrActive);
+            if (Hud != null) Hud.FadeIn(0.6f);
         }
 
         /// <summary>ModeManager: a mini-game run is over (results screen). High scores are kept per mode by ModeManager.</summary>
@@ -435,6 +438,7 @@ namespace NeonBreach
             Time.timeScale = 1f;
             Haptics.StopAll();
             SetCursor(false);
+            if (Hud != null) Hud.OnGameOver();   // starts the results-screen fade-in
         }
 
         void ClearLooseObjects()

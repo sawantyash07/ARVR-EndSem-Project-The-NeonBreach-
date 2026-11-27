@@ -1,0 +1,117 @@
+/* NEON BREACH - ESE project report, A4 print stylesheet (rendered with Chromium / Microsoft Edge "print to PDF") */
+@page {
+  size: A4;
+  margin: 20mm 18mm 18mm 22mm;
+  @top-left { content: "NEON BREACH \2013  AR/VR End-Semester Project Report"; font: 8pt "Segoe UI", Arial, sans-serif; color: #6b7280; vertical-align: bottom; padding-bottom: 3mm; }
+  @top-right { content: "ESE \00B7  AR/VR \00B7  2026\2013 27"; font: 8pt "Segoe UI", Arial, sans-serif; color: #6b7280; vertical-align: bottom; padding-bottom: 3mm; }
+  @bottom-center { content: counter(page); font: 9pt "Segoe UI", Arial, sans-serif; color: #374151; }
+}
+@page cover { margin: 0; @top-left { content: none } @top-right { content: none } @bottom-center { content: none } }
+
+:root { --ink: #111827; --ink2: #374151; --muted: #6b7280; --rule: #d1d5db; --accent: #0e6e8c; --accent2: #9d1d6a; --soft: #f3f6f9; --code: #f6f8fa; }
+html { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+body { margin: 0; color: var(--ink); font: 10.6pt/1.5 Cambria, "Times New Roman", Georgia, serif; text-align: justify; hyphens: auto; background: #fff; }
+p { margin: 0 0 7pt; orphans: 3; widows: 3; }
+a { color: var(--accent); text-decoration: none; }
+strong { color: #000; }
+
+/* ---------------------------------------------------------------- cover */
+.cover { page: cover; width: 210mm; height: 296mm; box-sizing: border-box; padding: 26mm 22mm 20mm; position: relative; text-align: center;
+  background: linear-gradient(180deg, #071019 0%, #0b1c2c 55%, #0d2233 100%); color: #e8f6ff; break-after: page; overflow: hidden; }
+.cover .inst { font: 600 13pt "Segoe UI", Arial, sans-serif; letter-spacing: .5px; color: #cfe9f5; }
+.cover .dept { font: 10.5pt "Segoe UI", Arial, sans-serif; color: #9fc3d4; margin-top: 2mm; }
+.cover .kind { margin-top: 14mm; font: 600 11pt "Segoe UI", Arial, sans-serif; letter-spacing: 3px; color: #7fe7ff; text-transform: uppercase; }
+.cover .title { margin-top: 5mm; font: 800 40pt "Segoe UI", Arial, sans-serif; letter-spacing: 2px; color: #3ff0ff; text-shadow: 3px 3px 0 #c2187d; }
+.cover .subtitle { margin-top: 3mm; font: 600 14.5pt "Segoe UI", Arial, sans-serif; color: #ffffff; }
+.cover .tag { margin-top: 2mm; font: 10.5pt "Segoe UI", Arial, sans-serif; color: #b6d8e6; }
+.cover .hero { margin: 9mm auto 0; width: 150mm; border: 1.5px solid #3ff0ff; box-shadow: 0 0 0 1.5px #c2187d; }
+.cover .who { margin-top: 10mm; display: flex; justify-content: center; gap: 18mm; text-align: left; }
+.cover .who h4 { margin: 0 0 2mm; font: 600 9pt "Segoe UI", Arial, sans-serif; letter-spacing: 2px; color: #7fe7ff; text-transform: uppercase; }
+.cover .who div { font: 11pt "Segoe UI", Arial, sans-serif; color: #fff; line-height: 1.6; }
+.cover .who span { color: #9fc3d4; font-size: 10pt; }
+.cover .foot { position: absolute; left: 0; right: 0; bottom: 14mm; font: 10pt "Segoe UI", Arial, sans-serif; color: #9fc3d4; }
+
+/* ---------------------------------------------------------------- front matter */
+.front { break-before: page; }
+.front h1, .unnum { font: 700 19pt "Segoe UI", Arial, sans-serif; color: var(--accent); margin: 0 0 8mm; padding-bottom: 2mm; border-bottom: 2px solid var(--accent); text-align: left; }
+.keywords { margin-top: 6mm; font-size: 10pt; color: var(--ink2); }
+.toc { font: 10pt "Segoe UI", Arial, sans-serif; text-align: left; }
+.toc .row { display: flex; align-items: baseline; gap: 2mm; margin: 0; padding: 1.2pt 0; }
+.toc .row .t { flex: 0 1 auto; }
+.toc .row .dots { flex: 1 1 auto; border-bottom: 1px dotted #9ca3af; transform: translateY(-3px); min-width: 6mm; }
+.toc .row .p { flex: 0 0 auto; min-width: 7mm; text-align: right; color: var(--ink2); }
+.toc .l1 { font-weight: 700; margin-top: 4pt; color: #0b2a38; }
+.toc .l2 { padding-left: 7mm; color: var(--ink2); font-size: 9.4pt; }
+.toc .crit { font-weight: 400; color: var(--accent2); font-size: 8.5pt; margin-left: 2mm; }
+.lof .row { font-size: 9.2pt; }
+
+/* ---------------------------------------------------------------- chapters */
+h1.chap { break-before: page; margin: 0 0 6mm; text-align: left; font: 700 21pt "Segoe UI", Arial, sans-serif; color: #0b2a38; }
+h1.chap .cnum { display: block; font: 600 10pt "Segoe UI", Arial, sans-serif; letter-spacing: 3px; text-transform: uppercase; color: var(--accent); margin-bottom: 2mm; }
+h1.chap .crit { display: inline-block; margin-top: 3mm; font: 600 9pt "Segoe UI", Arial, sans-serif; letter-spacing: 1px; color: #fff; background: var(--accent2); padding: 1.5mm 3mm; border-radius: 2mm; }
+h2 { font: 700 13.2pt "Segoe UI", Arial, sans-serif; color: var(--accent); margin: 8mm 0 3mm; text-align: left; break-after: avoid; }
+h3 { font: 700 11pt "Segoe UI", Arial, sans-serif; color: #0b2a38; margin: 5mm 0 2mm; text-align: left; break-after: avoid; }
+h4 { font: 700 10pt "Segoe UI", Arial, sans-serif; color: var(--ink2); margin: 3mm 0 1.5mm; break-after: avoid; }
+ul, ol { margin: 0 0 7pt; padding-left: 6mm; }
+li { margin: 0 0 2.5pt; }
+.evidence { border: 1px solid #9ad3e2; background: #eef9fc; border-left: 4px solid var(--accent); padding: 3mm 4mm; margin: 0 0 6mm; font: 9.4pt/1.45 "Segoe UI", Arial, sans-serif; text-align: left; break-inside: avoid; }
+.evidence b.h { display: block; color: var(--accent); letter-spacing: 1px; text-transform: uppercase; font-size: 8.6pt; margin-bottom: 1mm; }
+.evidence ul { margin: 0; }
+.note { border-left: 4px solid #d97706; background: #fff8eb; padding: 2.5mm 4mm; margin: 4mm 0; font: 9.4pt/1.45 "Segoe UI", Arial, sans-serif; text-align: left; break-inside: avoid; }
+.good { border-left: 4px solid #15803d; background: #effaf2; padding: 2.5mm 4mm; margin: 4mm 0; font: 9.4pt/1.45 "Segoe UI", Arial, sans-serif; text-align: left; break-inside: avoid; }
+.gap { border-left: 4px solid #b91c1c; background: #fdf1f1; padding: 2.5mm 4mm; margin: 4mm 0; font: 9.4pt/1.45 "Segoe UI", Arial, sans-serif; text-align: left; break-inside: avoid; }
+.note b, .good b, .gap b { font-weight: 700; }
+
+/* ---------------------------------------------------------------- tables */
+.tcap, figcaption, .lcap { font: 9pt/1.35 "Segoe UI", Arial, sans-serif; color: var(--ink2); text-align: center; }
+.tcap { margin: 4mm 0 1.5mm; font-weight: 600; break-after: avoid; }
+.tcap b, figcaption b, .lcap b { color: var(--accent); }
+table { width: 100%; border-collapse: collapse; margin: 0 0 5mm; font: 8.7pt/1.35 "Segoe UI", Arial, sans-serif; text-align: left; break-inside: auto; }
+table th { background: #0e3a4c; color: #fff; font-weight: 600; padding: 1.6mm 2mm; border: 1px solid #0e3a4c; vertical-align: bottom; }
+table td { padding: 1.3mm 2mm; border: 1px solid var(--rule); vertical-align: top; }
+table tr { break-inside: avoid; }
+table tbody tr:nth-child(even) td { background: #f7f9fb; }
+table.compact { font-size: 8.1pt; }
+table.compact td, table.compact th { padding: 1mm 1.6mm; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+td code, li code, p code { font: 8.4pt Consolas, "Cascadia Mono", monospace; background: #eef1f4; padding: 0 1px; border-radius: 2px; }
+.st-ok { color: #15803d; font-weight: 700; }
+.st-mock { color: #0e6e8c; font-weight: 700; }
+.st-hw { color: #b45309; font-weight: 700; }
+.st-plan { color: #6b7280; font-weight: 700; }
+
+/* ---------------------------------------------------------------- figures */
+figure { margin: 4mm 0 5mm; text-align: center; break-inside: avoid; }
+figure img { max-width: 100%; border: 1px solid #cbd5e1; display: block; margin: 0 auto; }
+figure.w90 img { width: 90%; } figure.w80 img { width: 80%; } figure.w70 img { width: 70%; } figure.w60 img { width: 60%; } figure.w50 img { width: 50%; } figure.w40 img { width: 40%; }
+figure.tall img { max-height: 215mm; width: auto; }
+figure.tall2 img { max-height: 180mm; width: auto; }
+figcaption { margin-top: 1.8mm; padding: 0 6mm; }
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 3mm 4mm; margin: 4mm 0 5mm; break-inside: avoid; }
+.grid2 figure, .grid3 figure { margin: 0; }
+.grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 3mm 3mm; margin: 4mm 0 5mm; break-inside: avoid; }
+.grid2 figcaption, .grid3 figcaption { padding: 0 1mm; font-size: 8.2pt; }
+.sidebyside { display: grid; grid-template-columns: 1fr 1fr; gap: 5mm; align-items: start; }
+pre.mermaid { margin: 0; background: #fff; font-family: "Segoe UI", Arial, sans-serif; text-align: center; }
+pre.mermaid svg { max-width: 100% !important; height: auto; }
+figure.diagram { border: 1px solid #dbe3ea; padding: 3mm 2mm 2mm; background: #fff; }
+figure.diagram.maxh pre.mermaid svg { max-height: 200mm; width: auto; }
+
+/* ---------------------------------------------------------------- code & equations */
+.lcap { text-align: left; margin: 4mm 0 1mm; font-weight: 600; break-after: avoid; }
+pre.code { font: 7.9pt/1.38 Consolas, "Cascadia Mono", monospace; background: var(--code); border: 1px solid #e1e6eb; border-left: 3px solid var(--accent); padding: 2.5mm 3mm; margin: 0 0 5mm; white-space: pre-wrap; word-break: break-word; text-align: left; break-inside: auto; }
+pre.code .k { color: #9d1d6a; } pre.code .c { color: #6a7f8c; font-style: italic; } pre.code .s { color: #1a7f37; }
+.eq { margin: 3mm 0 4mm; padding: 2.5mm 4mm; background: var(--soft); border: 1px solid #e3e9ef; text-align: center; font: italic 11pt Cambria, "Cambria Math", serif; break-inside: avoid; }
+.eq .en { float: right; font-style: normal; font-size: 9.5pt; color: var(--muted); }
+.eq .where { display: block; margin-top: 1.5mm; font: normal 8.8pt/1.4 "Segoe UI", Arial, sans-serif; color: var(--ink2); text-align: left; }
+
+/* ---------------------------------------------------------------- misc */
+.kv { display: grid; grid-template-columns: 40mm 1fr; gap: 1mm 4mm; font: 9.6pt "Segoe UI", Arial, sans-serif; text-align: left; }
+.kv b { color: var(--ink2); }
+.small { font-size: 9pt; }
+.center { text-align: center; }
+.pb { break-before: page; }
+.avoid { break-inside: avoid; }
+.refs li { margin-bottom: 4pt; font-size: 9.6pt; text-align: left; }
+.chip { display: inline-block; font: 600 7.6pt "Segoe UI", Arial, sans-serif; padding: 0.4mm 1.6mm; border-radius: 1.6mm; color: #fff; }
+.chip.ok { background: #15803d; } .chip.mock { background: #0e6e8c; } .chip.hw { background: #b45309; } .chip.plan { background: #6b7280; }

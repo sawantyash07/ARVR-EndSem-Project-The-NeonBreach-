@@ -539,6 +539,12 @@ namespace NeonBreach
                 GameMode gmode = ModeManager.All[i];
                 float bx = x + i * (cw + gap);
                 bool current = mm.Current == gmode && GameManager.Instance.State != GameState.Menu;
+                // card panel behind button + description: lights up and pulses while the pointer is over it
+                Rect card = R(bx - 10f, y - 10f, cw + 20f, h + 10f);
+                bool over = card.Contains(Event.current.mousePosition);
+                float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 4f + i * 1.3f);
+                Fill(card, new Color(0.02f, 0.06f, 0.11f, over ? 0.8f : 0.45f));
+                Border(card, over ? new Color(Cyan.r, Cyan.g, Cyan.b, 0.55f + 0.45f * pulse) : new Color(0.15f, 0.5f, 0.6f, current ? 0.8f : 0.35f), over ? 3f : 1.5f);
                 if (Button(R(bx, y, cw, 70f), ModeManager.Name(gmode) + "  (" + ModeManager.HotKey(gmode) + ")", true, 28, current))
                 {
                     mm.SwitchTo(gmode);
@@ -565,6 +571,16 @@ namespace NeonBreach
             if (mm == null || mm.IsShooter || mm.Active == null) return false;
             MiniGame g = mm.Active;
             FullScreenArea();
+            // results fade in over ~0.5 s instead of popping up (gameOverTime is set when the run ends)
+            float appear = Mathf.SmoothStep(0f, 1f, Mathf.Clamp01((Time.unscaledTime - gameOverTime) / 0.5f));
+            Color oldGui = GUI.color;
+            GUI.color = new Color(oldGui.r, oldGui.g, oldGui.b, appear);
+            try { return DrawModeResultsBody(gm, mm, g); }
+            finally { GUI.color = oldGui; }
+        }
+
+        bool DrawModeResultsBody(GameManager gm, ModeManager mm, MiniGame g)
+        {
             Fill(new Rect(0f, 0f, Screen.width, Screen.height), new Color(0.01f, 0.02f, 0.05f, 0.72f));
             float cx = W * 0.5f;
             Text(R(cx - 800f, 70f, 1600f, 90f), g.ResultTitle, 70, Cyan, TextAnchor.MiddleCenter);

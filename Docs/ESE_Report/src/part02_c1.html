@@ -1,0 +1,128 @@
+<h1 class="chap" data-chap="2" data-crit="1" id="ch2">Problem Definition, Objectives &amp; Requirements</h1>
+<div class="evidence"><b class="h">Evidence in this chapter</b>
+<ul><li>Formal problem statement and motivation backed by the VR frame-time budget ([[t-budget]]).</li>
+<li>Nine measurable objectives with success criteria and achieved results ([[t-objectives]]).</li>
+<li>24 functional requirements ([[t-fr]]) and 10 non-functional requirements ([[t-nfr]]), each traced to code and to its verification status.</li>
+<li>Scope boundaries, constraints, assumptions and expected outcomes.</li></ul></div>
+
+<h2>Problem Statement</h2>
+<p><i>Design and implement an immersive, real-time 3D application in Unity that delivers several distinct VR interactions (shooting, archery and free-fall flight) and a mixed-reality mode from one code base; that runs on a desktop PC, on PC VR headsets through the OpenXR standard and on a Meta Quest in passthrough; that accepts keyboard and mouse, gamepad, tracked controllers and bare-hand gestures through a single input model; and that stays within the frame-time budget of a 90 Hz headset while following established VR-comfort guidelines.</i></p>
+
+<h2>Motivation</h2>
+<p>Four practical problems motivated the project:</p>
+<ol>
+<li><b>Device fragmentation.</b> Vendor SDKs tie an application to one headset family, and student projects often work only on the headset they were developed with. OpenXR removes most of this lock-in, but the application must still be designed so that its gameplay does not depend on a particular controller layout, or on controllers at all.</li>
+<li><b>Cybersickness.</b> A mismatch between visual motion and the vestibular sense causes nausea in a large share of users (LaViola [4]). Artificial locomotion, smooth rotation, camera shake and low frame rates all make it worse. Comfort therefore has to be part of the design, not a later patch.</li>
+<li><b>A hard real-time budget.</b> A headset must receive a new stereo frame every refresh. Missing that deadline produces judder, which is itself a sickness trigger. The budget is the reciprocal of the refresh rate ([[t-budget]]).</li>
+<li><b>Evaluating XR without a headset.</b> Headsets are scarce in teaching labs. A project that can be demonstrated and tested on a normal PC, and whose XR code can be exercised by automated or simulated input, is far easier to evaluate, debug and present.</li>
+</ol>
+<div class="eq">t<sub>frame</sub> = 1000 / f<sub>refresh</sub> &nbsp;[ms] &nbsp;&nbsp;&rArr;&nbsp;&nbsp; 72 Hz &rarr; 13.9 ms, &nbsp; 90 Hz &rarr; 11.1 ms, &nbsp; 120 Hz &rarr; 8.3 ms<span class="en">(2.1)</span></div>
+<table data-cap="Frame-time budgets of common headset refresh rates" id="t-budget" class="compact">
+<tr><th>Refresh rate</th><th class="num">Budget per frame</th><th>Typical devices</th><th>Project target</th></tr>
+<tr><td>72 Hz</td><td class="num">13.9 ms</td><td>Meta Quest 2 / 3 default</td><td rowspan="3">Average frame time below 11.1 ms on the development PC, so that the same content has headroom on a mobile headset</td></tr>
+<tr><td>90 Hz</td><td class="num">11.1 ms</td><td>Quest 3 at 90 Hz, HTC Vive, Valve Index (90 Hz mode)</td></tr>
+<tr><td>120 Hz</td><td class="num">8.3 ms</td><td>Quest 3 at 120 Hz, Valve Index (120 Hz mode)</td></tr>
+</table>
+
+<h2>Project Objectives</h2>
+<table data-cap="Project objectives, success criteria and achieved results" id="t-objectives" class="compact">
+<tr><th style="width:5%">ID</th><th style="width:24%">Objective</th><th style="width:30%">Measurable success criterion</th><th>Result (evidence)</th></tr>
+<tr><td>O1</td><td>Several distinct immersive interactions in one project</td><td>At least 3 interaction types, switchable at runtime without restarting</td><td><span class="st-ok">Achieved:</span> 4 game modes and a bonus scene; Shooter/Archery/Parachute switch with F5&ndash;F7 or the menus ([[ch8]])</td></tr>
+<tr><td>O2</td><td>Device-independent input</td><td>Gameplay code reads a single input structure filled by every device</td><td><span class="st-ok">Achieved:</span> <code>PlayerInputState</code> filled by 4 readers ([[f-input]]); controllers verified in the Mock Runtime</td></tr>
+<tr><td>O3</td><td>Real-time performance within the VR budget</td><td>Average frame time &lt; 11.1 ms in every mode on the development PC</td><td><span class="st-ok">Achieved:</span> 2.5&ndash;3.3 ms measured ([[t-perf]])</td></tr>
+<tr><td>O4</td><td>VR comfort</td><td>Vignette when moving or turning, snap/smooth turn, seated mode, no camera shake in VR</td><td><span class="st-mock">Verified in the Mock Runtime:</span> vignette amount 0.64 at 4.13 m/s; 45&deg; snap turn ([[f-vr-vignette]])</td></tr>
+<tr><td>O5</td><td>Mixed-reality integration</td><td>Real room boundary becomes walls, spawn points and a NavMesh; arena hidden</td><td><span class="st-mock">Logic verified</span> (3.5 &times; 3.5 m fallback room, 4 walls, 12 spawns); <span class="st-hw">passthrough feed needs a Quest</span></td></tr>
+<tr><td>O6</td><td>Spatial audio and haptics</td><td>3D sounds carry ITD/ILD cues; weapon and damage feedback through the controllers</td><td><span class="st-mock">Haptic impulses verified</span> (78 impulses counted by the runtime); binaural filter implemented ([[ch9]])</td></tr>
+<tr><td>O7</td><td>Physically plausible simulation</td><td>Arrows drop and drift with the wind; free fall settles at body-position terminal velocities</td><td><span class="st-ok">Achieved:</span> drag model ([[s-physics]]); 30/30 arrows on target with a ballistic aim solver</td></tr>
+<tr><td>O8</td><td>Usable UI for desktop and VR</td><td>Tutorial, settings, help, 4 languages; world-space VR menu with a pointer</td><td><span class="st-ok">Achieved</span> (desktop); VR menu <span class="st-mock">verified in the Mock Runtime</span> ([[f-vr-menu]])</td></tr>
+<tr><td>O9</td><td>Self-contained, licence-free content</td><td>No imported 3D models, textures or audio files</td><td><span class="st-ok">Achieved:</span> all content generated by C# code ([[ch7]])</td></tr>
+</table>
+
+<h2>Scope</h2>
+<div class="sidebyside">
+<div><h4>In scope</h4><ul>
+<li>Four single-player game modes and a bonus Farm Sniper scene; two-player local co-op in the shooter</li>
+<li>Desktop, PC VR (OpenXR) and Meta Quest MR builds from one project</li>
+<li>Controllers (5 interaction profiles) and articulated hand tracking</li>
+<li>VR comfort options, haptics and binaural spatial audio</li>
+<li>Procedural generation of all models, textures, sound and levels</li>
+<li>Local persistence: settings, per-mode high scores, top-10 leaderboard, lifetime statistics, death heat map</li>
+<li>Automated smoke test and simulated-XR verification</li></ul></div>
+<div><h4>Out of scope</h4><ul>
+<li>Online multiplayer and online leaderboards</li>
+<li>Store publishing (Meta Horizon Store, Steam)</li>
+<li>Eye tracking and foveated rendering</li>
+<li>Full scene-mesh understanding (furniture, walls as meshes); the MR mode uses the play-area boundary</li>
+<li>A formal user study with a simulator-sickness questionnaire</li>
+<li>Physically two-handed bow drawing (planned, [[ch14]])</li></ul></div>
+</div>
+
+<h2>Stakeholders and Users</h2>
+<table data-cap="Stakeholders and their needs" class="compact">
+<tr><th style="width:22%">Stakeholder</th><th>Needs addressed</th></tr>
+<tr><td>Player (desktop)</td><td>Responsive controls, clear HUD, tutorial, difficulty levels, rebindable keys</td></tr>
+<tr><td>Player (VR / MR)</td><td>Comfortable locomotion, natural aiming with the hand, readable world-space UI, haptic and spatial-audio feedback, play with or without controllers</td></tr>
+<tr><td>Examiner / course instructor</td><td>A project that can be demonstrated on a PC, clear evidence for each criterion, measurable results</td></tr>
+<tr><td>Developers (the team)</td><td>Modular code, Inspector-tunable parameters, automated tests, reproducible scene builds</td></tr>
+</table>
+
+<h2>Functional Requirements</h2>
+<p>[[t-fr]] lists the functional requirements, the modules that implement them and how each was verified. The verification labels are defined in the Rubric-to-Evidence Map.</p>
+<table data-cap="Functional requirements, implementing modules and verification status" id="t-fr" class="compact">
+<tr><th style="width:5%">ID</th><th>Requirement</th><th style="width:25%">Implemented in</th><th style="width:15%">Status</th></tr>
+<tr><td>FR1</td><td>A main menu offering every game, the tutorial, the leaderboard, settings, help and quit</td><td><code>HUDMenus.DrawMenu</code></td><td><span class="st-ok">Verified</span></td></tr>
+<tr><td>FR2</td><td>Endless waves of growing size; snipers from wave 3, tanks from wave 4, a boss every 5th wave</td><td><code>WaveManager</code></td><td><span class="st-ok">Verified</span></td></tr>
+<tr><td>FR3</td><td>Six enemy types with distinct AI (grunt, gunner, drone, boss, sniper, shield tank)</td><td><code>Enemy</code></td><td><span class="st-ok">Verified</span></td></tr>
+<tr><td>FR4</td><td>Three weapons with fire, reload, aim-down-sights and switching; grenades; melee</td><td><code>WeaponSystem</code>, <code>Grenade</code></td><td><span class="st-ok">Verified</span></td></tr>
+<tr><td>FR5</td><td>An upgrade shop between waves (5 upgrades, 3 supply items) paid with earned credits</td><td><code>HUDShop</code>, <code>Progression</code></td><td><span class="st-ok">Verified</span></td></tr>
+<tr><td>FR6</td><td>Power-ups: Double Damage (12 s) and Slow Motion (8 s, enemies only)</td><td><code>Pickup</code>, <code>PowerUps</code></td><td><span class="st-ok">Verified</span></td></tr>
+<tr><td>FR7</td><td>Two arenas (Neon Grid, Foundry) and three difficulty levels</td><td><code>ArenaManager</code>, <code>DifficultyInfo</code></td><td><span class="st-ok">Verified</span></td></tr>
+<tr><td>FR8</td><td>Local split-screen co-op with a gamepad for player 2; downed partners revive after the wave</td><td><code>GameManager</code>, <code>HUD</code></td><td><span class="st-ok">Verified</span> (without a physical gamepad)</td></tr>
+<tr><td>FR9</td><td>Archery: hold to draw, release to shoot, gravity/drag/wind ballistics, 3 &times; 10 arrows, ring scoring, streak and moving-target bonuses</td><td><code>ArcheryMode</code>, <code>Arrow</code>, <code>ArcheryTarget</code>, <code>WindSystem</code></td><td><span class="st-ok">Verified</span></td></tr>
+<tr><td>FR10</td><td>Parachute: plane exit, free fall with speed control, 12 rings, deploy window below 2,000 m, auto-deploy at 300 m, canopy with brakes and flare, scored landing</td><td><code>ParachuteMode</code>, <code>ParachuteController</code>, <code>SkydiveSettings</code></td><td><span class="st-ok">Verified</span></td></tr>
+<tr><td>FR11</td><td>Switching between Shooter, Archery and Parachute at any time without restarting, with full clean-up</td><td><code>ModeManager.SwitchTo</code></td><td><span class="st-ok">Verified</span> (desktop and Mock VR)</td></tr>
+<tr><td>FR12</td><td>Rat Shooter: title, how-to, countdown, 5 levels, 5 mouse variants, aim-down-sights, reload, pause, level clear with stars, game over, victory</td><td><code>RatShooterGame</code>, <code>MouseAI</code>, <code>CartoonGun</code></td><td><span class="st-ok">Verified</span></td></tr>
+<tr><td>FR13</td><td>Farm Sniper: briefing, scoped rifle with 4&times;/8&times;/12&times;, simulated bullets, crop health, win and fail conditions</td><td><code>FarmGameManager</code>, <code>SniperRifle</code>, <code>RatAI</code></td><td><span class="st-ok">Verified</span></td></tr>
+<tr><td>FR14</td><td>Stereo VR rendering with 6DoF head tracking through OpenXR</td><td>XR Plug-in Management, <code>VRRig.Track</code></td><td><span class="st-mock">Verified (Mock XR)</span></td></tr>
+<tr><td>FR15</td><td>Tracked controllers mapped to every game action</td><td><code>VRRig.Read</code></td><td><span class="st-mock">Verified (Mock XR)</span></td></tr>
+<tr><td>FR16</td><td>Hand-tracking gestures: pinch to fire, open palm to reload, left pinch for a grenade, left palm for a medkit</td><td><code>HandTracking</code></td><td><span class="st-hw">Needs hardware</span></td></tr>
+<tr><td>FR17</td><td>World-space VR menus driven by a laser pointer and the trigger (or a pinch)</td><td><code>VRMenu</code>, <code>VRMenuDriver</code></td><td><span class="st-mock">Verified (Mock XR)</span></td></tr>
+<tr><td>FR18</td><td>VR comfort: tunnelling vignette, snap or smooth turn, seated mode, recenter</td><td><code>ComfortVignette</code>, <code>VRRig</code></td><td><span class="st-mock">Verified (Mock XR)</span></td></tr>
+<tr><td>FR19</td><td>Mixed reality: hide the arena, show passthrough, convert the room boundary into walls, spawn points and a NavMesh</td><td><code>MixedReality</code>, <code>ArenaManager</code></td><td><span class="st-mock">Logic verified</span>; <span class="st-hw">passthrough needs hardware</span></td></tr>
+<tr><td>FR20</td><td>Haptic feedback per weapon, on damage and on nearby explosions (controllers and gamepad)</td><td><code>Haptics</code></td><td><span class="st-mock">Verified (Mock XR)</span></td></tr>
+<tr><td>FR21</td><td>Binaural spatial audio for 3D sounds (or a vendor spatializer if one is installed)</td><td><code>BinauralFilter</code>, <code>Sfx</code></td><td><span class="st-ok">Implemented</span>, desktop audio</td></tr>
+<tr><td>FR22</td><td>An interactive tutorial of 8 steps that adapts to the input device</td><td><code>Tutorial</code></td><td><span class="st-ok">Verified</span></td></tr>
+<tr><td>FR23</td><td>Settings in 6 tabs (gameplay, graphics, audio, controls, VR, language), key rebinding and 4 languages, saved between sessions</td><td><code>HUDMenus</code>, <code>KeyBindings</code>, <code>Loc</code>, <code>GameSettings</code></td><td><span class="st-ok">Verified</span></td></tr>
+<tr><td>FR24</td><td>A top-10 leaderboard, lifetime statistics and post-game analytics (death heat map, damage over time, kills per enemy type, accuracy per weapon)</td><td><code>Stats</code>, <code>HUDGameOver</code></td><td><span class="st-ok">Verified</span></td></tr>
+</table>
+
+<h2>Non-Functional Requirements</h2>
+<table data-cap="Non-functional requirements and how they are met" id="t-nfr" class="compact">
+<tr><th style="width:6%">ID</th><th style="width:17%">Quality</th><th style="width:33%">Requirement</th><th>How it is met / measured</th></tr>
+<tr><td>NFR1</td><td>Performance</td><td>Average frame time below 11.1 ms in every mode on the development PC</td><td>2.5&ndash;3.3 ms measured with the built-in profiler counters ([[t-perf]])</td></tr>
+<tr><td>NFR2</td><td>Comfort</td><td>No camera motion that the user did not cause; vignette during artificial motion; snap-turn option</td><td>Shake, recoil and head bob are disabled in VR; vignette and blink ([[s-comfort]])</td></tr>
+<tr><td>NFR3</td><td>Portability</td><td>Vendor-neutral XR; automatic desktop fallback</td><td>OpenXR with 5 controller profiles; <code>VRRig.Active</code> falls back to desktop when no head device exists</td></tr>
+<tr><td>NFR4</td><td>Usability</td><td>A first-time player can learn every control in-game</td><td>8-step tutorial, F1 help overlay, a <i>How to Play</i> page, key hints on the HUD</td></tr>
+<tr><td>NFR5</td><td>Accessibility</td><td>Adjustable controls and comfort</td><td>Key rebinding, mouse sensitivity, invert Y, FOV, seated mode, vignette strength, 4 languages</td></tr>
+<tr><td>NFR6</td><td>Maintainability</td><td>Modular, documented, tunable code</td><td>3 namespaces, 123 scripts with summary comments; Inspector-exposed tuning, e.g. 60+ skydive parameters ([[f-insp-skydive]])</td></tr>
+<tr><td>NFR7</td><td>Reliability</td><td>No errors or exceptions during normal play</td><td>Automated smoke test; 0 errors and 0 warnings in the console after the verification runs ([[ch10]])</td></tr>
+<tr><td>NFR8</td><td>Footprint and licensing</td><td>No third-party assets; small repository</td><td>All content procedural; the Assets folder is about 41 MB, including the generated meshes</td></tr>
+<tr><td>NFR9</td><td>Compatibility</td><td>Unity 6000.5.5f1, Built-in Render Pipeline, Input System</td><td>Compiles against both input back-ends; Windows player builds; Android/Quest needs the Android Build Support module</td></tr>
+<tr><td>NFR10</td><td>Persistence</td><td>Settings and progress survive restarts</td><td>PlayerPrefs keys for settings, bindings, per-mode high scores, leaderboard and statistics ([[t-prefs]])</td></tr>
+</table>
+
+<h2 id="s-constraints">Constraints and Assumptions</h2>
+<ul>
+<li><b>No physical headset was available</b> during the ESE preparation. VR features were therefore verified with the OpenXR Mock Runtime, which exercises the real OpenXR code path but has no lenses, cameras or hand tracking. Features that depend on real sensors are labelled <i>needs hardware</i>.</li>
+<li>The development machine has only the Windows build module installed. A Quest (Android) build requires installing <i>Android Build Support</i> and re-running the project's OpenXR configuration tool for the Android tab.</li>
+<li>Development used Unity 6000.5.5f1 with the Built-in Render Pipeline. A custom post-processing shader replaces URP's volume system.</li>
+<li>All performance figures come from the development PC (Intel Core i7-13650HX, NVIDIA GeForce RTX 4060 Laptop GPU). A mobile headset GPU is slower, so the large margin under 11.1 ms is intentional.</li>
+</ul>
+
+<h2>Expected Outcomes</h2>
+<ol>
+<li>A playable, demonstrable project with four game modes (and a bonus scene) that runs on a standard Windows PC without additional hardware.</li>
+<li>A VR-ready build that runs on any OpenXR headset with controllers or hands, and a Quest MR mode.</li>
+<li>Measured evidence that the project meets its real-time and comfort requirements.</li>
+<li>Documentation, diagrams and screenshots that allow the system to be evaluated, maintained and extended.</li>
+</ol>

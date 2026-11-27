@@ -178,7 +178,7 @@ namespace NeonBreach
             Stamina = maxStamina;
             Medkits = 1;
             if (flashlight != null) flashlight.enabled = false;
-            if (cam != null) cam.fieldOfView = GameSettings.Fov;
+            Util.SetFov(cam, GameSettings.Fov);
         }
 
         void Update()
@@ -522,7 +522,7 @@ namespace NeonBreach
             Kills = 0; DistanceMoved = 0f; LookAmount = 0f; Jumps = 0; Slides = 0; Dashes = 0; SprintTime = 0f;
             if (flashlight != null) flashlight.enabled = false;
             if (weapons != null) weapons.ResetAll();
-            if (cam != null) cam.fieldOfView = GameSettings.Fov;
+            Util.SetFov(cam, GameSettings.Fov);
             cc.height = 1.8f;
             cc.center = new Vector3(0f, 0.9f, 0f);
             eyeHeight = 1.62f;
@@ -564,7 +564,7 @@ namespace NeonBreach
             if (dashTimer > 0f) fov += 14f;
             if (weapons != null && ads > 0f) fov = Mathf.Lerp(fov, weapons.Current.adsFov, ads);
             if (FovOverride > 0f) fov = FovOverride;
-            cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, fov, 1f - Mathf.Exp(-12f * dt));
+            Util.SetFov(cam, Mathf.Lerp(cam.fieldOfView, fov, 1f - Mathf.Exp(-12f * dt)));
         }
 
         /// <summary>
@@ -621,7 +621,7 @@ namespace NeonBreach
                 cameraPivot.localPosition = new Vector3(0f, 1.62f + Mathf.Sin(Time.time * 0.6f) * 0.04f, 0f);
                 cameraPivot.localRotation = Quaternion.Euler(pitch, 0f, 0f);
             }
-            if (cam != null) cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, GameSettings.Fov, dt * 4f);
+            if (cam != null) Util.SetFov(cam, Mathf.Lerp(cam.fieldOfView, GameSettings.Fov, dt * 4f));
         }
 
         void DeathCam(float dt, bool vrOn)

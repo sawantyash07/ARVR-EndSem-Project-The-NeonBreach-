@@ -67,6 +67,13 @@ namespace NeonBreach
         Transform nocked;
         float bowKick;
 
+        // trajectory guide: a dotted arc that predicts the arrow's flight while the bow is drawn
+        LineRenderer guide;
+        Material guideMat;
+        Texture2D guideTex;
+        readonly Vector3[] guidePts = new Vector3[48];
+        const float GuideStep = 0.04f;   // seconds between predicted points - each dash is 40 ms of flight
+
         float nockCooldown;
         bool needRelease;
         float roundEndTimer;
@@ -109,6 +116,10 @@ namespace NeonBreach
             lowerJoints.Clear();
             if (range != null) Destroy(range);
             if (bowRoot != null) Destroy(bowRoot.gameObject);
+            if (guide != null) Destroy(guide.gameObject);
+            if (guideMat != null) Destroy(guideMat);
+            if (guideTex != null) Destroy(guideTex);
+            guide = null; guideMat = null; guideTex = null;
             range = null;
             bowRoot = null;
             if (player != null) player.ClearModeHooks();
@@ -199,6 +210,7 @@ namespace NeonBreach
             if (gm == null || !gm.Playing)
             {
                 UpdateBow(Time.unscaledDeltaTime);
+                if (guide != null && guide.enabled) guide.enabled = false;
                 return;
             }
             float dt = Time.deltaTime;
@@ -225,7 +237,106 @@ namespace NeonBreach
             }
 
             UpdateBow(dt);
+            UpdateGuide();
             UpdateWrist();
+        }
+
+        /// <summary>Where and in which direction an arrow released now would leave the bow (shared by Release and the guide).</summary>
+        void LaunchRay(bool vr, out Vector3 origin, out Vector3 dir)
+        {
+            if (vr && bowRoot != null)
+            {
+                dir = bowRoot.forward;
+                origin = bowRoot.position + dir * 0.1f;
+            }
+            else
+            {
+                Transform ct = player.cam.transform;
+                dir = ct.forward;
+                origin = ct.position + dir * 0.45f;
+            }
+        }
+
+        static float LaunchSpeed(float draw) { return Mathf.Lerp(MinSpeed, MaxSpeed, Mathf.Pow(draw, 0.85f)); }
+
+        void BuildGuide()
+        {
+            if (guide != null) return;
+            // 16x2 texture: half opaque, half clear -> one dash per line segment (RepeatPerSegment)
+            guideTex = new Texture2D(16, 2, TextureFormat.RGBA32, false);
+            guideTex.wrapMode = TextureWrapMode.Repeat;
+            guideTex.filterMode = FilterMode.Bilinear;
+            Color[] px = new Color[32];
+            for (int i = 0; i < 32; i++) px[i] = (i % 16) < 9 ? Color.white : new Color(1f, 1f, 1f, 0f);
+            guideTex.SetPixels(px);
+            guideTex.Apply(false, true);
+            guideMat = Mats.FxColor(Color.white);
+            guideMat.name = "FX_TrajectoryGuide";
+            guideMat.mainTexture = guideTex;
+
+            GameObject go = new GameObject("TrajectoryGuide");
+            guide = go.AddComponent<LineRenderer>();
+            guide.useWorldSpace = true;
+            guide.sharedMaterial = guideMat;
+            guide.textureMode = LineTextureMode.RepeatPerSegment;
+            guide.alignment = LineAlignment.View;
+            guide.numCapVertices = 2;
+            guide.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            guide.receiveShadows = false;
+            guide.positionCount = 0;
+            guide.enabled = false;
+        }
+
+        /// <summary>
+        /// Show the predicted flight of the drawn arrow (same physics as the real arrow, including this round's wind)
+        /// as a dotted neon arc. It fades in with the draw and fades out towards the far end, so it teaches how draw
+        /// strength, gravity and wind shape the shot while judging the exact impact point stays the archer's job.
+        /// </summary>
+        void UpdateGuide()
+        {
+            if (guide == null) BuildGuide();
+            bool show = State == Phase.Shooting && ArrowsLeft > 0 && Draw >= 0.12f && player != null && player.cam != null;
+            if (!show)
+            {
+                if (guide.enabled) guide.enabled = false;
+                return;
+            }
+            Vector3 origin, dir;
+            LaunchRay(player.VrOn, out origin, out dir);
+            bool hit;
+            int n = Arrow.Predict(origin, dir * LaunchSpeed(Draw), guidePts, GuideStep, out hit);
+            int first = 0;
+            if (!player.VrOn && nocked != null && nocked.gameObject.activeInHierarchy && n > 1)
+            {
+                // desktop arrows launch from the eye, so the exact path is seen end-on as a dot under the crosshair.
+                // Draw the guide from the nocked arrow's tip instead and blend it onto the true predicted path
+                // ((1 - t)^2 falloff), so the arc reads clearly while the predicted impact point stays exact.
+                Vector3 off = nocked.position - origin;
+                for (int i = 0; i < n; i++)
+                {
+                    float k = 1f - (float)i / (n - 1);
+                    guidePts[i] += off * (k * k);
+                }
+            }
+            else first = Mathf.Min(1, n - 1);   // VR: skip the point inside the bow
+            int count = n - first;
+            if (count < 2) { guide.enabled = false; return; }
+            guide.positionCount = count;
+            for (int i = 0; i < count; i++) guide.SetPosition(i, guidePts[first + i]);
+
+            float a = Mathf.InverseLerp(0.12f, 0.6f, Draw) * (Exhausted ? 0.4f : 0.9f);
+            Color c = Draw >= 0.999f ? new Color(0.75f, 1f, 1f, 1f) : new Color(0.25f, 0.9f, 1f, 1f);
+            Gradient g = new Gradient();
+            g.SetKeys(new[] { new GradientColorKey(c, 0f), new GradientColorKey(c, 1f) },
+                      new[] { new GradientAlphaKey(a * 0.7f, 0f), new GradientAlphaKey(a, 0.08f), new GradientAlphaKey(a * 0.85f, 0.6f), new GradientAlphaKey(a * (hit ? 0.55f : 0f), 1f) });
+            guide.colorGradient = g;
+            // seen almost end-on from the archer's eye, so the width grows with distance to keep a constant on-screen
+            // thickness (~0.7 degrees): width = 0.012 x distance from the eye at both ends of the arc
+            Vector3 eye = player.cam.transform.position;
+            float w0 = Mathf.Max(0.006f, Vector3.Distance(eye, guidePts[first]) * 0.012f);
+            float w1 = Mathf.Max(w0, Vector3.Distance(eye, guidePts[n - 1]) * 0.012f);
+            guide.widthCurve = AnimationCurve.Linear(0f, w0, 1f, w1);
+            guide.enabled = true;
         }
 
         void UpdateAim(PlayerInputState inp, float dt, bool vr)
@@ -296,19 +407,9 @@ namespace NeonBreach
 
         void Release(bool vr)
         {
-            Camera cam = player.cam;
             Vector3 origin, dir;
-            if (vr && bowRoot != null)
-            {
-                dir = bowRoot.forward;
-                origin = bowRoot.position + dir * 0.1f;
-            }
-            else
-            {
-                dir = cam.transform.forward;
-                origin = cam.transform.position + dir * 0.45f;
-            }
-            float speed = Mathf.Lerp(MinSpeed, MaxSpeed, Mathf.Pow(Draw, 0.85f));
+            LaunchRay(vr, out origin, out dir);
+            float speed = LaunchSpeed(Draw);
             Arrow a = Arrow.Spawn(origin, dir * speed, this, FletchColor);
             a.Round = Round;
             a.Index = ArrowsPerRound - ArrowsLeft;

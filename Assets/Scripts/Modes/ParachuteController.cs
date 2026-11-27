@@ -104,7 +104,7 @@ namespace NeonBreach
             if (oldBody != null) oldBody.SetActive(true);
             if (p != null && p.cam != null)
             {
-                p.cam.fieldOfView = GameSettings.Fov;
+                Util.SetFov(p.cam, GameSettings.Fov);
                 p.cam.cullingMask = originalMask;
                 if (!p.VrOn && p.cameraPivot != null)
                 {
@@ -583,7 +583,7 @@ namespace NeonBreach
 
             // near plane: big up high, but always well in front of the jumper in third person
             cam.nearClipPlane = Mathf.Lerp(nearFp, Mathf.Clamp(dist * 0.3f, 0.08f, nearFp > 0.1f ? nearFp : 0.3f), t);
-            cam.fieldOfView = Mathf.Lerp(cam.fieldOfView, fov, 1f - Mathf.Exp(-4f * dt));
+            Util.SetFov(cam, Mathf.Lerp(cam.fieldOfView, fov, 1f - Mathf.Exp(-4f * dt)));
 
             // show the skydiver body to its own camera only in third person
             int bodyBit = 1 << Layers.PlayerBody(p.index);

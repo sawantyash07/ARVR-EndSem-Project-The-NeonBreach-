@@ -44,6 +44,42 @@ namespace NeonBreach
         /// <summary>Round and shot number this arrow belongs to (filled in by ArcheryMode).</summary>
         public int Round, Index;
 
+        /// <summary>
+        /// Predict the flight path of an arrow launched with this velocity using exactly the same model as Fly()
+        /// (gravity, quadratic drag, current wind; swept raycasts against the environment). Fills buf with points
+        /// spaced 'step' seconds apart and returns how many were written; hit tells whether the path ends on a surface.
+        /// Used by the archery trajectory guide.
+        /// </summary>
+        public static int Predict(Vector3 pos, Vector3 vel, Vector3[] buf, float step, out bool hit)
+        {
+            hit = false;
+            if (buf == null || buf.Length == 0) return 0;
+            Vector3 wind = WindSystem.Instance != null ? WindSystem.Instance.Current : Vector3.zero;
+            buf[0] = pos;
+            int n = 1;
+            while (n < buf.Length)
+            {
+                Vector3 accel = Physics.gravity - vel * (vel.magnitude * Drag);
+                Vector3 dir = vel.sqrMagnitude > 0.01f ? vel.normalized : Vector3.forward;
+                accel += Vector3.ProjectOnPlane(wind - vel, dir) * WindCoupling;
+                Vector3 next = pos + vel * step + 0.5f * accel * step * step;
+                Vector3 seg = next - pos;
+                float len = seg.magnitude;
+                RaycastHit h;
+                if (len > 0.0001f && Physics.Raycast(pos, seg / len, out h, len, Layers.EnvMask, QueryTriggerInteraction.Ignore))
+                {
+                    buf[n++] = h.point;
+                    hit = true;
+                    break;
+                }
+                vel += accel * step;
+                pos = next;
+                buf[n++] = pos;
+                if (pos.y < -5f) break;
+            }
+            return n;
+        }
+
         public static Arrow Spawn(Vector3 position, Vector3 velocity, ArcheryMode owner, Color fletch)
         {
             GameObject go = new GameObject("Arrow");

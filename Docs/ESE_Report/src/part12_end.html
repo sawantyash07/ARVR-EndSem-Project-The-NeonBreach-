@@ -1,0 +1,115 @@
+<h1 class="chap" data-chap="12" id="ch12">Results and Discussion</h1>
+<h2>Performance</h2>
+<p>Frame times were read from Unity's built-in frame-timing counters through the project's performance overlay (F4) in Editor Play mode at the Game-view resolution, on the machine in [[t-hw]]. [[t-perf]] and [[f-perf]] summarise the results. Every mode stays far inside the 11.1 ms budget of a 90 Hz headset; the trajectory guide added in the polish pass keeps Archery at 3.1 ms. Editor measurements include Editor overhead, so a standalone player is expected to be at least as fast; on-device VR frame times were not measured (Chapter 10).</p>
+<table data-cap="Average frame time per mode on the development PC" id="t-perf" class="compact">
+<tr><th>Mode / scene</th><th class="num">Average frame time (ms)</th><th class="num">Approx. FPS</th><th style="width:16%">Measured</th></tr>
+<tr><td>Shooter &ndash; Neon Grid (combat)</td><td class="num">3.3</td><td class="num">300</td><td>22 Nov</td></tr>
+<tr><td>Shooter &ndash; Foundry</td><td class="num">2.7</td><td class="num">370</td><td>22 Nov</td></tr>
+<tr><td>Archery range</td><td class="num">2.5</td><td class="num">400</td><td>22 Nov</td></tr>
+<tr><td>Archery range with the trajectory guide visible</td><td class="num">3.1 (worst 10.3)</td><td class="num">321</td><td>27 Nov</td></tr>
+<tr><td>Parachute (in the plane)</td><td class="num">3.0</td><td class="num">330</td><td>22 Nov</td></tr>
+<tr><td>Rat Shooter (level 1)</td><td class="num">2.5</td><td class="num">400</td><td>22 Nov</td></tr>
+<tr><td>Farm Sniper (bonus scene)</td><td class="num">2.8</td><td class="num">360</td><td>22 Nov</td></tr>
+</table>
+<figure id="f-perf" class="diagram"><chart-perf/><figcaption>Average frame time per mode against the 90 Hz (11.1 ms) and 72 Hz (13.9 ms) VR frame budgets.</figcaption></figure>
+
+<h2>Achievement of the Objectives</h2>
+<table data-cap="Outcome against the main objectives" id="t-outcome" class="compact avoid">
+<tr><th style="width:34%">Objective</th><th>Outcome</th></tr>
+<tr><td>Several complete game modes in one project</td><td>Four game modes reachable from one main menu, plus a bonus Farm Sniper scene; all four re-tested on 27 Nov 2026 with 0 errors and 0 warnings</td></tr>
+<tr><td>Device-independent interaction</td><td>Keyboard/mouse, gamepad, VR controllers and hand tracking share one input state</td></tr>
+<tr><td>Working XR implementation</td><td>OpenXR configured and validated (0 issues); VR pipeline executed end to end in the Mock Runtime; real-headset testing pending</td></tr>
+<tr><td>Physically plausible gameplay</td><td>Arrow ballistics with drag and wind and an exact trajectory prediction; free fall with posture-dependent terminal velocity; grenades and knock-back</td></tr>
+<tr><td>Polished and consistent UX</td><td>Shared neon style, hover animation, fade transitions in every mode, HUDs for all modes, tutorial, settings, four languages</td></tr>
+<tr><td>Real-time performance</td><td>2.5&ndash;3.3 ms per frame in every mode</td></tr>
+</table>
+
+<h2>Discussion</h2>
+<p>The project's main strength is breadth on a single, coherent foundation: four quite different games share input, audio, UI and XR code, which kept each new mode small and made the VR and co-op support available everywhere. Procedural generation removed every licensing question and keeps the repository free of art files, at the cost of a stylised rather than photorealistic look. The final polish pass showed the value of verifying every change in the running game: both the trajectory guide (invisible end-on from the eye) and the fade transition (used up by a long mode build) worked in isolation but failed in the real game, and both were fixed only because the result was captured and measured rather than assumed. The main open risk is the absence of a physical headset test; the Mock Runtime proves the software path, but comfort and tracking quality can only be confirmed on hardware.</p>
+
+<h1 class="chap" data-chap="13" id="ch13">Conclusion</h1>
+<p>NEON BREACH is a Unity 6 project with four playable game modes &ndash; a neon arena Shooter, Archery, Parachute and a cartoon Rat Shooter &ndash; built on one shared player, input, audio and user-interface framework and an OpenXR-based VR layer with hand tracking and a mixed-reality mode. The report has documented it against all ten ESE criteria: the problem and requirements, the technical background, the architecture, the XR implementation, tracking and registration, the procedurally generated assets, the user interface, the advanced features, the technical documentation and testing, and the demonstration plan.</p>
+<p>In the final pass the existing project was preserved and improved only where it mattered: an exact archery trajectory guide, consistent fade transitions on every mode start, a fading results screen, and animated hover feedback for every button and mode card. Each change was compiled, played and measured, and the complete run of all four modes ended with no errors or warnings and frame times around 3 ms. What remains unverified is stated plainly: VR was executed through the OpenXR Mock Runtime but not yet on a physical headset, and the passthrough and hand-tracking features need Meta Quest hardware for their final check.</p>
+
+<h1 class="chap" data-chap="14" id="ch14">Future Scope</h1>
+<ul>
+<li><b>On-device VR evaluation</b> on a Meta Quest 3 over Link and as a native Android build: frame timing, tracking quality, hand-tracking robustness and the mixed-reality passthrough.</li>
+<li><b>User study</b> with the Simulator Sickness Questionnaire [5] and a usability questionnaire to evaluate the comfort settings and the interface with real participants.</li>
+<li><b>Physically two-handed bow</b> in VR: draw the string with the second controller or hand, with haptic tension feedback.</li>
+<li><b>Spatial anchors and scene understanding</b> in MR mode, so enemies and targets use real furniture as cover.</li>
+<li><b>Unified VR UI</b> for all screens (settings and statistics), and a world-space version of the Rat Shooter HUD.</li>
+<li><b>Online features:</b> a cloud leaderboard and networked co-op.</li>
+<li><b>Farm Sniper</b> linked from the main menu, with its own best score and the shared fade transition.</li>
+</ul>
+
+<h1 class="unnum" id="refs">References</h1>
+<ol class="refs">
+<li>I. E. Sutherland, &ldquo;A head-mounted three dimensional display,&rdquo; in <i>Proc. AFIPS Fall Joint Computer Conference</i>, vol. 33, pp. 757&ndash;764, 1968.</li>
+<li>P. Milgram and F. Kishino, &ldquo;A taxonomy of mixed reality visual displays,&rdquo; <i>IEICE Transactions on Information and Systems</i>, vol. E77-D, no. 12, pp. 1321&ndash;1329, 1994.</li>
+<li>R. T. Azuma, &ldquo;A survey of augmented reality,&rdquo; <i>Presence: Teleoperators and Virtual Environments</i>, vol. 6, no. 4, pp. 355&ndash;385, 1997.</li>
+<li>J. J. LaViola Jr., &ldquo;A discussion of cybersickness in virtual environments,&rdquo; <i>ACM SIGCHI Bulletin</i>, vol. 32, no. 1, pp. 47&ndash;56, 2000.</li>
+<li>R. S. Kennedy, N. E. Lane, K. S. Berbaum and M. G. Lilienthal, &ldquo;Simulator Sickness Questionnaire: an enhanced method for quantifying simulator sickness,&rdquo; <i>International Journal of Aviation Psychology</i>, vol. 3, no. 3, pp. 203&ndash;220, 1993.</li>
+<li>A. S. Fernandes and S. K. Feiner, &ldquo;Combating VR sickness through subtle dynamic field-of-view modification,&rdquo; in <i>Proc. IEEE Symposium on 3D User Interfaces (3DUI)</i>, pp. 201&ndash;210, 2016.</li>
+<li>Y. Farmani and R. J. Teather, &ldquo;Evaluating discrete viewpoint control to reduce cybersickness in virtual reality,&rdquo; <i>Virtual Reality</i>, vol. 24, pp. 645&ndash;664, 2020.</li>
+<li>M. Slater, M. Usoh and A. Steed, &ldquo;Taking steps: the influence of a walking technique on presence in virtual reality,&rdquo; <i>ACM Transactions on Computer-Human Interaction</i>, vol. 2, no. 3, pp. 201&ndash;219, 1995.</li>
+<li>G. Welch and E. Foxlin, &ldquo;Motion tracking: no silver bullet, but a respectable arsenal,&rdquo; <i>IEEE Computer Graphics and Applications</i>, vol. 22, no. 6, pp. 24&ndash;38, 2002.</li>
+<li>S. Han et al., &ldquo;MEgATrack: monochrome egocentric articulated hand-tracking for virtual reality,&rdquo; <i>ACM Transactions on Graphics</i>, vol. 39, no. 4, art. 87, 2020.</li>
+<li>The Khronos Group, <i>The OpenXR Specification</i>, version 1.1. [Online]. Available: https://registry.khronos.org/OpenXR/</li>
+<li>Unity Technologies, <i>XR Plug-in Management</i> package documentation, v4.5. [Online]. Available: https://docs.unity3d.com/Packages/com.unity.xr.management@4.5/manual/</li>
+<li>Unity Technologies, <i>OpenXR Plugin</i> package documentation, v1.17 (features, interaction profiles, Mock Runtime and conformance automation). [Online]. Available: https://docs.unity3d.com/Packages/com.unity.xr.openxr@1.17/manual/</li>
+<li>Unity Technologies, <i>XR Hands</i> package documentation, v1.8. [Online]. Available: https://docs.unity3d.com/Packages/com.unity.xr.hands@1.8/manual/</li>
+<li>Unity Technologies, <i>AR Foundation</i> package documentation, v6.5. [Online]. Available: https://docs.unity3d.com/Packages/com.unity.xr.arfoundation@6.5/manual/</li>
+<li>Unity Technologies, <i>Input System</i> package documentation, v1.19. [Online]. Available: https://docs.unity3d.com/Packages/com.unity.inputsystem@1.19/manual/</li>
+<li>Unity Technologies, <i>AI Navigation</i> package documentation (NavMeshSurface), v2.0. [Online]. Available: https://docs.unity3d.com/Packages/com.unity.ai.navigation@2.0/manual/</li>
+<li>M. Mononen, <i>Recast &amp; Detour</i> navigation-mesh toolset. [Online]. Available: https://github.com/recastnavigation/recastnavigation</li>
+<li>P. E. Hart, N. J. Nilsson and B. Raphael, &ldquo;A formal basis for the heuristic determination of minimum cost paths,&rdquo; <i>IEEE Transactions on Systems Science and Cybernetics</i>, vol. 4, no. 2, pp. 100&ndash;107, 1968.</li>
+<li>C. W. Reynolds, &ldquo;Steering behaviors for autonomous characters,&rdquo; in <i>Proc. Game Developers Conference</i>, pp. 763&ndash;782, 1999.</li>
+<li>Lord Rayleigh, &ldquo;On our perception of sound direction,&rdquo; <i>Philosophical Magazine</i>, series 6, vol. 13, no. 74, pp. 214&ndash;232, 1907.</li>
+<li>R. S. Woodworth, <i>Experimental Psychology</i>. New York: Henry Holt, 1938.</li>
+<li>D. R. Begault, <i>3-D Sound for Virtual Reality and Multimedia</i>. Cambridge, MA: Academic Press, 1994.</li>
+<li>K. Perlin, &ldquo;An image synthesizer,&rdquo; <i>ACM SIGGRAPH Computer Graphics</i>, vol. 19, no. 3, pp. 287&ndash;296, 1985.</li>
+<li>J. Jimenez, &ldquo;Next generation post processing in Call of Duty: Advanced Warfare,&rdquo; <i>Advances in Real-Time Rendering in Games</i>, ACM SIGGRAPH course, 2014.</li>
+<li>K. Narkowicz, &ldquo;ACES filmic tone mapping curve,&rdquo; 2016. [Online]. Available: https://knarkowicz.wordpress.com/2016/01/06/aces-filmic-tone-mapping-curve/</li>
+<li>A. Lake, C. Marshall, M. Harris and M. Blackstein, &ldquo;Stylized rendering techniques for scalable real-time 3D animation,&rdquo; in <i>Proc. 1st International Symposium on Non-Photorealistic Animation and Rendering (NPAR)</i>, pp. 13&ndash;20, 2000.</li>
+<li>M. R. Mine, &ldquo;Virtual environment interaction techniques,&rdquo; Technical Report TR95-018, University of North Carolina at Chapel Hill, 1995.</li>
+<li>D. A. Bowman, E. Kruijff, J. J. LaViola Jr. and I. Poupyrev, <i>3D User Interfaces: Theory and Practice</i>. Boston: Addison-Wesley, 2004.</li>
+<li>J. Nielsen, &ldquo;10 usability heuristics for user interface design,&rdquo; Nielsen Norman Group, 1994 (updated 2020). [Online]. Available: https://www.nngroup.com/articles/ten-usability-heuristics/</li>
+<li>Valve Corporation, <i>Half-Life: Alyx</i> [VR video game], 2020.</li>
+<li>Beat Games, <i>Beat Saber</i> [VR video game], 2019.</li>
+<li>SUPERHOT Team, <i>SUPERHOT VR</i> [VR video game], 2016.</li>
+<li>Cloudhead Games, <i>Pistol Whip</i> [VR video game], 2019.</li>
+<li>Meta Platforms, <i>First Encounters</i> [mixed-reality application for Meta Quest 3], 2023.</li>
+<li>Unity Technologies, <i>Unity 6 Manual</i>. [Online]. Available: https://docs.unity3d.com/6000.0/Documentation/Manual/</li>
+</ol>
+
+<h1 class="chap" data-chap="A" id="appA">OpenXR Mock Runtime Verification Procedure</h1>
+<p>This appendix lists the calls used in the VR verification of 22 Nov 2026 ([[s-mockvr]]). They were issued from the command line with the Unity CLI's <code>script eval</code> while the game ran in Play mode; none of them is part of the game code. The observed values are reported in [[t-mock-results]]; the raw console transcripts of that session were not archived, so only the procedure and the summarised results are given.</p>
+<table data-cap="Calls used in the OpenXR Mock Runtime verification" id="t-mock-calls" class="compact">
+<tr><th style="width:36%">Purpose</th><th>API (OpenXR Plugin test features)</th></tr>
+<tr><td>Enable the simulated device for the session</td><td><i>Mock Runtime</i>, <i>Conformance Automation</i> and <i>Khronos Simple Controller</i> OpenXR features enabled for Standalone (disabled again afterwards)</td></tr>
+<tr><td>Head pose</td><td><code>MockRuntime.SetSpace(XrReferenceSpaceType.View, position, orientation, flags)</code></td></tr>
+<tr><td>Controller grip and aim poses</td><td><code>ConformanceAutomationFeature.ConformanceAutomationSetPose(...)</code></td></tr>
+<tr><td>Buttons, triggers and thumbsticks</td><td><code>ConformanceAutomationSetBool</code>, <code>ConformanceAutomationSetFloat</code>, <code>ConformanceAutomationSetVec2</code></td></tr>
+<tr><td>Count haptic impulses</td><td>Handler on <code>MockRuntime.onScriptEvent</code></td></tr>
+<tr><td>Read game state</td><td><code>VRRig.HeadsetPresent</code>, <code>GameManager.VrActive</code>, <code>UnityEngine.XR.InputDevices</code> device list and poses</td></tr>
+</table>
+
+<h1 class="chap" data-chap="B" id="appB">Screenshot Gallery</h1>
+<p>All images are unedited Game-view or Editor captures of the project (captured 22 Nov 2026, and 27 Nov 2026 for the files marked <i>new</i> in the report sources), resized for print.</p>
+<div class="grid3">
+<figure><img src="../img/r/shooter__06_grenade_explosion.jpg"><figcaption>Shooter: grenade explosion.</figcaption></figure>
+<figure><img src="../img/r/shooter__11_power_up_double_damage.jpg"><figcaption>Shooter: double-damage power-up with timers.</figcaption></figure>
+<figure><img src="../img/r/shooter__07_shop_armory.jpg"><figcaption>Shooter: upgrade shop between waves.</figcaption></figure>
+<figure><img src="../img/r/shooter__24_coop_split_screen.jpg"><figcaption>Shooter: split-screen co-op.</figcaption></figure>
+<figure><img src="../img/r/archery__01_range_overview.jpg"><figcaption>Archery: range overview.</figcaption></figure>
+<figure><img src="../img/r/archery__07_round_summary.jpg"><figcaption>Archery: round summary.</figcaption></figure>
+<figure><img src="../img/r/parachute__04_freefall_belly.jpg"><figcaption>Parachute: belly-to-earth free fall.</figcaption></figure>
+<figure><img src="../img/r/parachute__10_canopy_flight.jpg"><figcaption>Parachute: canopy flight.</figcaption></figure>
+<figure><img src="../img/r/parachute__13_landed.jpg"><figcaption>Parachute: landed near the pad.</figcaption></figure>
+<figure><img src="../img/r/rat_shooter__01_title.jpg"><figcaption>Rat Shooter: title screen.</figcaption></figure>
+<figure><img src="../img/r/new__13_ratshooter_play.jpg"><figcaption>Rat Shooter in play (27 Nov 2026).</figcaption></figure>
+<figure><img src="../img/r/rat_shooter__14_victory.jpg"><figcaption>Rat Shooter: victory.</figcaption></figure>
+<figure><img src="../img/r/vr__vr_04_combat_fire.jpg"><figcaption>VR (Mock Runtime): firing.</figcaption></figure>
+<figure><img src="../img/r/vr__vr_12_mr_breach.jpg"><figcaption>MR mode in the Mock Runtime: the arena is hidden for passthrough (black, as the mock device has no camera feed).</figcaption></figure>
+<figure><img src="../img/r/ed__unity_editor_full.png"><figcaption>Unity Editor with the project open.</figcaption></figure>
+</div>

@@ -1,0 +1,110 @@
+<h1 class="chap" data-chap="3" data-crit="2" id="ch3">Literature Survey &amp; Technical Background</h1>
+<div class="evidence"><b class="h">Evidence in this chapter</b>
+<ul><li>Survey of the foundations of XR: head-mounted displays, the reality&ndash;virtuality continuum, augmented-reality registration ([[f-continuum]]).</li>
+<li>Tracking technologies compared ([[t-tracking]]) and the OpenXR runtime architecture ([[f-openxr-arch]]).</li>
+<li>Research on cybersickness, VR interaction, spatial hearing, navigation AI, procedural generation and rendering, each mapped to a design decision in NEON BREACH ([[t-lit-map]]).</li>
+<li>Comparison with existing commercial VR/MR applications ([[t-apps]]); 36 references.</li></ul></div>
+
+<h2>Evolution and Definitions of XR</h2>
+<p>Sutherland's 1968 head-mounted three-dimensional display [1] established the core idea that VR still relies on: a display mounted on the head whose image is updated from tracked head pose, so that virtual objects appear fixed in space. Milgram and Kishino [2] placed real and virtual environments at the two ends of a <i>reality&ndash;virtuality continuum</i>. <i>Augmented reality</i> adds virtual objects to a predominantly real view, <i>augmented virtuality</i> adds real elements to a virtual world, and <i>mixed reality</i> covers the whole range between the two extremes. Azuma's survey [3] defined AR by three properties: it combines real and virtual, it is interactive in real time, and it is <i>registered in 3D</i>. Registration, keeping virtual content aligned with the real world, is the central technical problem of AR.</p>
+<figure class="diagram" id="f-continuum"><pre class="mermaid">flowchart LR
+  RE["Real<br/>environment"] --- AR["Augmented<br/>reality"] --- AV["Augmented<br/>virtuality"] --- VE["Virtual<br/>environment"]
+  MR1["NEON BREACH<br/>MR breach mode<br/>(passthrough + virtual enemies)"] -.-> AR
+  VR1["NEON BREACH<br/>VR modes<br/>(arena, range, sky)"] -.-> VE
+  DT["NEON BREACH<br/>desktop mode"] -.-> VE</pre>
+<figcaption>Milgram and Kishino's reality&ndash;virtuality continuum [2] and where the modes of NEON BREACH sit on it.</figcaption></figure>
+
+<h2>Tracking Technologies</h2>
+<p>Tracking measures the pose (position and orientation) of the head, the controllers and the hands. Welch and Foxlin's review [9] shows that no single sensor is sufficient. Inertial measurement units (IMUs) are fast but drift, and optical systems are drift-free but slower and can be occluded. Practical trackers therefore fuse the two. <i>3DoF</i> trackers report orientation only; <i>6DoF</i> trackers add position, which is what makes leaning, crouching and room-scale walking possible. <i>Outside-in</i> systems use external base stations or cameras (Valve Lighthouse, Oculus Rift CV1). <i>Inside-out</i> systems use cameras on the headset itself with visual-inertial odometry or SLAM (Meta Quest, Windows Mixed Reality). The same cameras also make controller-free <i>hand tracking</i> possible: MEgATrack [10] showed real-time articulated tracking of 26-joint hand skeletons from the Quest's monochrome cameras, the technique behind the hand input that OpenXR exposes through <code>XR_EXT_hand_tracking</code>.</p>
+<table data-cap="Comparison of XR tracking technologies" id="t-tracking" class="compact">
+<tr><th style="width:17%">Technology</th><th style="width:9%">DoF</th><th>Principle</th><th style="width:22%">Strengths / weaknesses</th><th style="width:18%">Use in NEON BREACH</th></tr>
+<tr><td>IMU only</td><td>3</td><td>Gyroscope and accelerometer integration</td><td>Very low latency; drifts, no position</td><td>Not used alone</td></tr>
+<tr><td>Outside-in optical</td><td>6</td><td>External base stations sweep lasers, or external cameras track markers</td><td>Precise, large volume; needs installed hardware</td><td>Supported through OpenXR (Valve Index, HTC Vive profiles)</td></tr>
+<tr><td>Inside-out visual-inertial (SLAM/VIO)</td><td>6</td><td>Headset cameras plus IMU estimate the pose and map the room</td><td>No external hardware, supports a room boundary; controllers must stay in camera view</td><td>Primary target (Meta Quest; Touch, Touch Plus and Touch Pro profiles)</td></tr>
+<tr><td>Articulated hand tracking</td><td>26 joints &times; 6</td><td>Neural-network keypoint estimation from headset cameras [10]</td><td>No controllers; occlusion and jitter</td><td><code>HandTracking.cs</code> with pinch hysteresis</td></tr>
+<tr><td>Boundary / play area</td><td>&ndash;</td><td>A user-drawn polygon on the tracked floor</td><td>Simple, always available on Quest; no furniture detail</td><td>MR walls, spawn points and NavMesh</td></tr>
+</table>
+
+<h2>The OpenXR Standard</h2>
+<p>OpenXR [11] is the Khronos Group's royalty-free standard interface between XR applications and XR runtimes. An application talks to a <i>loader</i>, which binds the <i>active runtime</i> installed by the device vendor (Meta Quest Link, SteamVR, Windows Mixed Reality). Four concepts matter most for this project:</p>
+<ul>
+<li><b>Reference spaces.</b> <code>VIEW</code> (head-locked), <code>LOCAL</code> (a seated origin at the starting head pose) and <code>STAGE</code> (a floor-level origin at the centre of the play area). Unity reports these as the <i>Device</i> and <i>Floor</i> tracking-origin modes.</li>
+<li><b>The action system and interaction profiles.</b> Applications declare abstract actions and suggest bindings for each <i>interaction profile</i> (for example <code>/interaction_profiles/oculus/touch_controller</code>). The runtime chooses the profile that matches the hardware, which allows remapping between vendors.</li>
+<li><b>Extensions.</b> Optional capabilities such as hand tracking (<code>XR_EXT_hand_tracking</code>), Meta passthrough, and <code>XR_EXT_conformance_automation</code>, which lets a test inject controller poses and button states. This report uses the last one to verify the VR pipeline (Chapter 5).</li>
+<li><b>Coordinate convention.</b> OpenXR uses a right-handed system with &minus;Z forward; Unity uses a left-handed system with +Z forward. The conversion is analysed in Chapter 6.</li>
+</ul>
+<figure class="diagram" id="f-openxr-arch"><pre class="mermaid">flowchart TB
+  APP["NEON BREACH (C# game code)<br/>VRRig, HandTracking, MixedReality, Haptics"] --> UXR["Unity XR layer<br/>InputDevices / CommonUsages, XR Hands, AR Foundation"]
+  UXR --> SUB["Unity XR subsystems<br/>Display, Input, Hand, Camera, Session"]
+  SUB --> PLG["Unity OpenXR plug-in 1.17<br/>features: controller profiles, hand tracking, Meta Quest"]
+  PLG --> LDR["OpenXR loader"]
+  LDR --> R1["Meta Quest runtime<br/>(Link or standalone)"]
+  LDR --> R2["SteamVR runtime<br/>(Index, Vive)"]
+  LDR --> R3["Unity OpenXR Mock Runtime<br/>(used for verification)"]</pre>
+<figcaption>Software layers between the game and the headset. Swapping the runtime at the bottom does not require any change to the game code above it.</figcaption></figure>
+
+<h2>The Unity XR Technology Stack</h2>
+<table data-cap="Unity technologies used by NEON BREACH and their role" id="t-unity-stack" class="compact">
+<tr><th style="width:24%">Technology (version)</th><th>Role in the project</th></tr>
+<tr><td>Unity 6 (6000.5.5f1), Built-in Render Pipeline</td><td>Engine, editor, physics (PhysX), audio, rendering; custom post-processing shader instead of URP volumes</td></tr>
+<tr><td>XR Plug-in Management (4.5.4)</td><td>Selects and initialises the XR loader at start-up; manages XR subsystems</td></tr>
+<tr><td>OpenXR Plugin (1.17.1)</td><td>OpenXR loader, interaction profiles, features, Mock Runtime and conformance automation</td></tr>
+<tr><td>XR Hands (1.8.0)</td><td><code>XRHandSubsystem</code> exposing 26 joint poses per hand</td></tr>
+<tr><td>AR Foundation (6.5.0)</td><td><code>ARSession</code> and <code>ARCameraManager</code> for passthrough in MR mode</td></tr>
+<tr><td>Unity OpenXR: Meta (2.5.0)</td><td>Meta Quest features: session, camera (passthrough), boundary visibility, planes</td></tr>
+<tr><td>Input System (1.19.0)</td><td>Keyboard, mouse and gamepad devices; rebinding back-end</td></tr>
+<tr><td>AI Navigation (2.0.14)</td><td><code>NavMeshSurface</code> built at runtime for arenas and the MR room</td></tr>
+<tr><td>XR Composition Layers</td><td>Installed as a dependency of the XR packages; not used directly</td></tr>
+</table>
+<p>Unity exposes tracked devices in two ways. The <code>UnityEngine.XR.InputDevices</code> API with <code>CommonUsages</code> (for example <code>devicePosition</code>, <code>triggerButton</code>) reads any device through generic feature usages, independent of the vendor. Input System action maps are the alternative. NEON BREACH uses the first approach for XR devices, which keeps the code short and runtime-agnostic, and the Input System for desktop devices.</p>
+
+<h2>Cybersickness and VR Comfort</h2>
+<p>LaViola [4] reviews three explanations of cybersickness: sensory-conflict theory, postural-instability theory and poison theory. Sensory conflict, in which the eyes report motion that the vestibular system does not feel, is the most widely cited. It predicts that artificial locomotion and rotation are the main triggers. Kennedy et al. [5] introduced the Simulator Sickness Questionnaire (SSQ), still the standard instrument for measuring it. Several mitigation techniques have experimental support:</p>
+<ul>
+<li><b>Field-of-view restriction.</b> Fernandes and Feiner [6] dynamically narrowed the FOV during virtual motion and found that participants felt less sick and stayed in VR longer, mostly without noticing the restriction. NEON BREACH's <code>ComfortVignette</code> implements this idea, driven by speed and turn rate.</li>
+<li><b>Viewpoint snapping.</b> Farmani and Teather [7] showed that rotating the view in discrete steps (snap turning) reduces sickness compared with continuous rotation. NEON BREACH offers snap turns (with a short blink) and smooth turns.</li>
+<li><b>Real walking.</b> Slater, Usoh and Steed [8] found that walking in place or really walking produces stronger presence than virtual travel. The MR mode locks artificial locomotion so that the player walks for real, and room-scale head following keeps the body collider under the head.</li>
+<li><b>Frame rate and no involuntary motion.</b> Judder and camera motion the user did not cause are avoided: there is no camera shake, recoil kick or head bob in VR.</li>
+</ul>
+
+<h2>3D Interaction Techniques</h2>
+<p>Mine [28] described ray-casting selection, in which a virtual ray extends from the hand and the first object it hits is selected. It remains the dominant technique for distant selection and menus in VR. Bowman et al. [29] classify 3D interaction into selection, manipulation, navigation (travel and wayfinding), system control and symbolic input, and recommend placing system-control widgets in world space or on the body. NEON BREACH follows these recommendations: menus are world-space panels selected with a ray from the right hand, a wrist display on the left hand provides glanceable status (body-referenced UI), weapons and the bow are aimed directly with the tracked hand, and travel uses stick locomotion with comfort options, or real walking in MR.</p>
+
+<h2>Spatial Hearing and Binaural Audio</h2>
+<p>Rayleigh's duplex theory [21] explains horizontal sound localisation with two cues. The <i>interaural time difference</i> (ITD) dominates at low frequencies, and the <i>interaural level difference</i> (ILD), caused by the head shadowing the far ear, dominates at high frequencies. Woodworth's spherical-head model [22] gives ITD(&theta;) = (r/c)(&theta; + sin &theta;) for azimuth &theta;, head radius r and speed of sound c. Begault [23] describes how head-related transfer functions (HRTFs) combine these cues with spectral filtering by the pinna to produce convincing 3D sound over headphones. Commercial spatializers (Meta XR Audio, Steam Audio) use measured HRTFs. NEON BREACH implements a lightweight parametric approximation (ITD + ILD + head-shadow low-pass + a rear pinna cue) and automatically uses a vendor spatializer when one is installed (Chapter 9).</p>
+
+<h2>Game AI and Navigation</h2>
+<p>Path-finding in games is built on A* search [19] over a graph of the walkable space. A <i>navigation mesh</i> represents walkable surfaces as convex polygons. Mononen's Recast &amp; Detour [18], on which Unity's NavMesh is based, voxelises the scene geometry, extracts walkable regions and searches the polygon graph. Reynolds' steering behaviours [20] (seek, flee, separation, path following) turn a path into smooth, locally reactive motion. NEON BREACH builds the NavMesh at runtime with <code>NavMeshSurface</code> [17], because arenas, the archery range and the MR room are generated at runtime, and steers enemies along the path corners with a separation force.</p>
+
+<h2>Procedural Generation and Real-Time Rendering</h2>
+<p>Perlin's gradient noise [24] and its fractal sums remain the standard tool for natural terrain and textures. The parachute island's height field and colour map are generated this way. For the neon look, the project implements bloom with a bright-pass prefilter and a mip-chain blur, the approach popularised in Jimenez's <i>Call of Duty: Advanced Warfare</i> post-processing [25], followed by tone mapping. Filmic curves such as Narkowicz's ACES fit [26] are the usual choice in linear colour space; because NEON BREACH renders in gamma space, where such a curve would lift the shadows, it uses a highlight-only soft clip instead (Chapter 7). The Rat Shooter uses stylised cel shading in the tradition of Lake et al. [27]: a quantised diffuse ramp, a rim light and a crisp specular highlight.</p>
+
+<h2>Game Physics Background</h2>
+<p>A projectile moving through air experiences gravity and an aerodynamic drag force approximately proportional to the square of its speed, <b>F</b><sub>d</sub> = &minus;&frac12;&rho;C<sub>d</sub>A|<b>v</b>|<b>v</b>. Dividing by mass gives an acceleration &minus;k|<b>v</b>|<b>v</b>. A falling body therefore accelerates until drag balances gravity at the <i>terminal velocity</i> v<sub>t</sub> = &radic;(g/k). The terminal velocity of a skydiver depends on body position. Belly-to-earth free fall is commonly quoted at about 55 m/s (about 200 km/h), and head-down at 80 m/s or more. The project uses this model with tunable terminal velocities (Chapter 9).</p>
+
+<h2>Existing AR/VR Applications</h2>
+<p>[[t-apps]] compares well-known VR and MR titles with NEON BREACH. The comparison covers design dimensions (input, locomotion, comfort, MR); it is not a comparison of production scale.</p>
+<table data-cap="Comparison of NEON BREACH with existing VR/MR applications" id="t-apps" class="compact">
+<tr><th style="width:16%">Application</th><th style="width:16%">Genre</th><th>Interaction and locomotion</th><th style="width:20%">Relevance to this project</th></tr>
+<tr><td>Half-Life: Alyx [31]</td><td>Narrative shooter (PC VR)</td><td>Tracked-hand weapons and object interaction; teleport, shift and continuous locomotion options</td><td>Benchmark for hand-held weapon handling and comfort options</td></tr>
+<tr><td>SUPERHOT VR [33]</td><td>Action shooter</td><td>Time moves only when the player moves; no artificial locomotion</td><td>Shows that time manipulation can stay comfortable; compare NEON BREACH's enemy-only slow motion</td></tr>
+<tr><td>Pistol Whip [34]</td><td>Rhythm shooter</td><td>Automatic forward movement, aiming with tracked controllers</td><td>Controller aiming with strong audio-visual feedback</td></tr>
+<tr><td>Beat Saber [32]</td><td>Rhythm game</td><td>Stationary play; slicing with tracked controllers</td><td>Responsiveness and haptic feedback as the core of immersion</td></tr>
+<tr><td>First Encounters [35]</td><td>MR shooter (Meta Quest 3)</td><td>Passthrough; virtual creatures break through the user's real walls</td><td>Closest to NEON BREACH's MR breach mode; it uses Meta's scene model, whereas NEON BREACH uses the play-area boundary</td></tr>
+<tr><td><b>NEON BREACH</b></td><td>Shooter + archery + skydive + 2 bonus games</td><td>Controllers <i>or</i> hands; stick locomotion with vignette, snap/smooth turn and seated mode, or real walking in MR</td><td>Combines several interaction styles, a desktop fallback and simulated-XR verification in one project</td></tr>
+</table>
+
+<h2>Summary: from Literature to Design Decisions</h2>
+<table data-cap="How the literature informed the design of NEON BREACH" id="t-lit-map" class="compact">
+<tr><th style="width:30%">Finding from the literature</th><th>Design decision in NEON BREACH</th><th style="width:16%">Chapter</th></tr>
+<tr><td>Registration in 3D defines AR [3]</td><td>MR mode registers walls, spawn points and the NavMesh to the tracked play-area boundary</td><td>6</td></tr>
+<tr><td>Inside-out 6DoF tracking with a boundary is standard on standalone headsets [9]</td><td>Uses <code>XRInputSubsystem.TryGetBoundaryPoints</code>, with a fallback room when unavailable</td><td>6</td></tr>
+<tr><td>Vendor-neutral APIs reduce lock-in [11]</td><td>OpenXR only; generic <code>CommonUsages</code>; 5 controller profiles</td><td>5</td></tr>
+<tr><td>Hand tracking is precise enough for coarse gestures but jittery [10]</td><td>Pinch with hysteresis (2.0 cm on, 3.5 cm off); open palm must be held for 0.4 s</td><td>5, 6</td></tr>
+<tr><td>Dynamic FOV restriction and snapping reduce sickness [6], [7]</td><td>Speed- and turn-driven vignette; snap turn with a blink</td><td>9</td></tr>
+<tr><td>Real walking increases presence [8]</td><td>Room-scale head following; MR locks artificial locomotion</td><td>6</td></tr>
+<tr><td>Ray casting suits distant selection [28]</td><td>World-space menus with a hand ray and trigger/pinch</td><td>8</td></tr>
+<tr><td>ITD + ILD + spectral cues localise sound [21]&ndash;[23]</td><td>Parametric binaural filter with the Woodworth ITD</td><td>9</td></tr>
+<tr><td>NavMesh + steering give believable movement [18]&ndash;[20]</td><td>Runtime NavMesh, corner following, separation and flanking</td><td>9</td></tr>
+<tr><td>Noise-based procedural generation scales [24]</td><td>Fractal-noise island; all content generated in code</td><td>7</td></tr>
+</table>

@@ -119,6 +119,29 @@ namespace NeonBreach
             chart = null;
         }
 
+        float fadeStart = -10f, fadeDur = 0.6f;
+        bool fadePending;
+
+        /// <summary>Fade the screen in from black (mode start, restart, return to menu) for a consistent transition.</summary>
+        public void FadeIn(float duration = 0.6f)
+        {
+            fadePending = true;   // the clock starts on the first drawn frame, so a long mode build cannot use up the fade
+            fadeDur = Mathf.Max(0.05f, duration);
+        }
+
+        void DrawFade()
+        {
+            if (fadePending)
+            {
+                if (Event.current.type != EventType.Repaint) { Fill(new Rect(0f, 0f, Screen.width, Screen.height), new Color(0.004f, 0.01f, 0.025f, 1f)); return; }
+                fadePending = false;
+                fadeStart = Time.unscaledTime;
+            }
+            float t = (Time.unscaledTime - fadeStart) / fadeDur;
+            if (t >= 1f || t < 0f) return;
+            Fill(new Rect(0f, 0f, Screen.width, Screen.height), new Color(0.004f, 0.01f, 0.025f, 1f - Mathf.SmoothStep(0f, 1f, t)));
+        }
+
         public void ResetUi()
         {
             floats.Clear(); toasts.Clear();
@@ -175,7 +198,7 @@ namespace NeonBreach
         static void Fill(Rect r, Color c)
         {
             Color old = GUI.color;
-            GUI.color = c;
+            GUI.color = new Color(c.r, c.g, c.b, c.a * old.a);   // respects a global fade set through GUI.color
             GUI.DrawTexture(r, Texture2D.whiteTexture);
             GUI.color = old;
         }
@@ -206,7 +229,18 @@ namespace NeonBreach
         {
             bool hover = enabled && r.Contains(Event.current.mousePosition);
             Color bg = !enabled ? new Color(0.03f, 0.05f, 0.08f, 0.6f) : (hover ? new Color(0.1f, 0.55f, 0.65f, 0.85f) : (selected ? new Color(0.06f, 0.3f, 0.38f, 0.9f) : new Color(0.03f, 0.07f, 0.12f, 0.85f)));
+            if (hover)
+            {
+                // soft pulsing outer glow + left accent bar: the same hover language as the Rat Shooter button
+                float pulse = 0.5f + 0.5f * Mathf.Sin(Time.unscaledTime * 5f);
+                for (int i = 2; i >= 1; i--)
+                {
+                    float g = i * 3f * S;
+                    Border(new Rect(r.x - g, r.y - g, r.width + g * 2f, r.height + g * 2f), new Color(Cyan.r, Cyan.g, Cyan.b, (0.1f + 0.12f * pulse) / i), 2f);
+                }
+            }
             Fill(r, bg);
+            if (hover || selected) Fill(new Rect(r.x, r.y, 6f * S, r.height), hover ? Color.white : Cyan);
             Border(r, hover || selected ? Cyan : new Color(0.15f, 0.5f, 0.6f, enabled ? 0.9f : 0.4f), 2f);
             Text(r, text, size, !enabled ? new Color(1f, 1f, 1f, 0.35f) : (hover ? Color.white : new Color(0.8f, 0.95f, 1f, 1f)), TextAnchor.MiddleCenter);
             if (enabled && GUI.Button(r, GUIContent.none, GUIStyle.none))
@@ -292,6 +326,7 @@ namespace NeonBreach
             }
 
             FullScreenArea();
+            DrawFade();
             if (GameSettings.ShowFps)
                 Text(R(W - 200f, 1040f, 180f, 30f), Mathf.RoundToInt(fps) + " FPS", 22, Yellow, TextAnchor.MiddleRight);
             if (showPerf) DrawPerfOverlay();

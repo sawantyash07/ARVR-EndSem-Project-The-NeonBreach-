@@ -1,0 +1,127 @@
+<h1 class="chap" data-chap="6" data-crit="5" id="ch6">Tracking, Registration &amp; Spatial Understanding</h1>
+<div class="evidence"><b class="h">Evidence in this chapter</b>
+<ul><li>The tracking pipeline from the OpenXR runtime to Unity transforms ([[f-track-pipe]]) and the handedness conversion, taken from the OpenXR plug-in source ([[l-xrvec]]).</li>
+<li>The registration chain written as an equation (6.2) and <b>checked numerically</b> with measured poses ([[t-registration]]).</li>
+<li>Height calibration, room-scale head following and snap turns about the head, with the source and the geometry.</li>
+<li>Mixed-reality spatial understanding: the boundary polygon becomes walls, spawn points and a NavMesh ([[f-mr-room]], [[l-buildroom]]).</li>
+<li>Collision detection: physics layers, the collision matrix and every spatial query the game performs ([[t-layers]], [[t-queries]]).</li></ul></div>
+
+<h2>Tracking Pipeline</h2>
+<p>NEON BREACH tracks three body parts in VR: the head (centre eye) and the left and right hands. Each hand is tracked either as a controller or as an articulated hand skeleton. The headset's tracking system estimates poses in its own <i>tracking space</i>. OpenXR reports them relative to the application's reference space, Unity converts them into its coordinate system, and the game maps them into the virtual world ([[f-track-pipe]]).</p>
+<figure class="diagram" id="f-track-pipe"><pre class="mermaid">flowchart LR
+  S["Headset sensors<br/>cameras + IMU<br/>(inside-out SLAM/VIO)"] --> RT["OpenXR runtime<br/>poses in STAGE / LOCAL space<br/>right-handed, -Z forward"]
+  RT --> UX["Unity XR input subsystem<br/>converts to left-handed, +Z forward"]
+  UX --> ID["InputDevices<br/>devicePosition, deviceRotation,<br/>isTracked (Head, LeftHand, RightHand)"]
+  UX --> XH["XRHandSubsystem<br/>26 joint poses per hand"]
+  ID --> TR["VRRig.Track()<br/>+ height offset"]
+  XH --> HT["HandTracking<br/>aim pose, gestures"]
+  TR --> TF["Transforms under CameraPivot<br/>Main Camera, RightHand, LeftHand"]
+  HT --> TF
+  TF --> W["World space<br/>via Player and CameraPivot"]</pre>
+<figcaption>Tracking pipeline: from sensor data to the poses of the camera and hands in the game world.</figcaption></figure>
+
+<h2>Coordinate Systems and Handedness</h2>
+<p>OpenXR uses a <b>right-handed</b> coordinate system with +X right, +Y up and <b>&minus;Z forward</b>. Unity uses a <b>left-handed</b> system with +X right, +Y up and <b>+Z forward</b>. Converting between them mirrors the Z axis. For positions this negates z; for rotation quaternions, mirroring one axis negates the quaternion components of the two other axes ([[l-xrvec]]):</p>
+<div class="eq">p<sub>U</sub> = (x, y, &minus;z) &nbsp;&nbsp;&nbsp;&nbsp; q<sub>U</sub> = (&minus;q<sub>x</sub>, &minus;q<sub>y</sub>, q<sub>z</sub>, q<sub>w</sub>)<span class="en">(6.1)</span>
+<span class="where">The mapping is its own inverse, so the same formula converts Unity to OpenXR. Unity's OpenXR plug-in applies it in the <code>XrVector3f</code> and <code>XrQuaternionf</code> constructors.</span></div>
+<code-file src="Library/PackageCache/com.unity.xr.openxr@58837b2992e0/Runtime/NativeTypes/Core/XrVector3f.cs" lines="52-57" cap="Unity-to-OpenXR position conversion in the OpenXR plug-in" id="l-xrvec"/>
+<code-file src="Library/PackageCache/com.unity.xr.openxr@58837b2992e0/Runtime/NativeTypes/Core/XrQuaternionf.cs" lines="59-65" cap="Unity-to-OpenXR rotation conversion in the OpenXR plug-in"/>
+<p>This convention mattered in practice. During verification, a 15&deg; downward head pitch was first converted by hand with Eq. 6.1 before it was passed to the Mock Runtime's raw <code>SetSpace</code> call. Unity reported it back as 345&deg;, a 15&deg; <i>upward</i> pitch, which showed that the call already performs the conversion, so it had been applied twice. Passing the Unity-space rotation directly gave exactly 15.0&deg;. The conformance-automation API also converts internally, and the right-hand pose set through it was read back unchanged ([[s-mockvr]]).</p>
+<h3>Tracking origin modes</h3>
+<p>OpenXR offers a <code>LOCAL</code> space (origin at the initial head pose; Unity's <i>Device</i> mode) and a <code>STAGE</code> space (origin on the floor at the centre of the play area; Unity's <i>Floor</i> mode). With Floor origin a standing user's head is reported at about 1.6&ndash;1.8 m; with Device origin it is near 0. The rig handles both with the height calibration in Section 6.4. During verification the input subsystem reported origin mode <code>Floor</code>.</p>
+
+<h2>Transform Hierarchy and the Registration Chain</h2>
+<p><i>Registration</i> means placing tracked objects at the correct place in the virtual world. NEON BREACH registers the tracking space to the world through a fixed chain of transforms ([[f-hier]]):</p>
+<div class="eq">x<sub>world</sub> = T<sub>Player</sub>(p, &psi;) &middot; T<sub>CameraPivot</sub>(o) &middot; ( x<sub>track</sub> + h&thinsp;&#x177; )<span class="en">(6.2)</span>
+<span class="where">T<sub>Player</sub>: the player's world position p and yaw &psi; (moved by locomotion, snap turns and the CharacterController); T<sub>CameraPivot</sub>: the tracking-space origin o inside the player (shifted by room-scale compensation); x<sub>track</sub>: the device pose reported by OpenXR; h: the calibrated height offset; &#x177;: the up vector.</span></div>
+<code-file src="Assets/Scripts/VR/VRRig.cs" lines="361-396" cap="VRRig.ApplyPose and VRRig.Track &ndash; applying tracked poses with height calibration" id="l-track"/>
+<p>The chain was checked with known inputs during the Mock Runtime session. The Player object stood at (0, 0.05, 0) (its saved position, [[f-insp-player]]), the head was reported at the tracking-space origin, and the first calibration therefore chose h = 1.6 m. [[t-registration]] compares the values predicted by Equation 6.2 with the values the game produced.</p>
+<table data-cap="Registration check: injected tracking-space poses, predicted and measured world positions" id="t-registration" class="compact">
+<tr><th style="width:18%">Tracked node</th><th style="width:22%">Injected pose x<sub>track</sub> (m)</th><th>Value read back from <code>InputDevices</code></th><th style="width:22%">Predicted world position (Eq. 6.2)</th><th style="width:17%">Measured world position</th></tr>
+<tr><td>Head (CenterEye)</td><td>(0.00, 0.00, 0.00), pitch 15&deg;</td><td>(0.000, 0.000, 0.000), rotation (15.0&deg;, 0&deg;, 0&deg;)</td><td>(0, 0.05 + 1.6, 0) = (0.00, 1.65, 0.00)</td><td>(0.00, 1.65, 0.00)</td></tr>
+<tr><td>Right controller (grip)</td><td>(0.20, &minus;0.35, 0.35), pitch 10&deg;</td><td>(0.200, &minus;0.350, 0.350), rotation (10.0&deg;, 0&deg;, 0&deg;)</td><td>(0.20, 0.05 &minus; 0.35 + 1.6, 0.35) = (0.20, 1.30, 0.35)</td><td>(0.20, 1.30, 0.35)</td></tr>
+<tr><td>Left controller (grip)</td><td>(&minus;0.22, &minus;0.30, 0.30), rotation (&minus;60&deg;, 0&deg;, 80&deg;)</td><td>(&minus;0.220, &minus;0.300, 0.300), rotation (300.0&deg;, 0&deg;, 80.0&deg;)</td><td>(&minus;0.22, 1.35, 0.30)</td><td>Not logged (visible in [[f-vr-grid]])</td></tr>
+</table>
+
+<h2>Height Calibration and Recentering</h2>
+<p>A tracking-space height of zero means different things on different runtimes, and seated players need their view lifted to standing height so that cover and enemies line up. On the first valid head sample after start-up, after a recenter, or after the <i>Seated</i> option changes, <code>VRRig.Track</code> computes the offset h:</p>
+<div class="eq">h = max(0, 1.62 &minus; y<sub>head</sub>) &nbsp;(seated) &nbsp;&nbsp;&nbsp;&nbsp; h = 1.6 if y<sub>head</sub> &lt; 0.7 m, otherwise 0 &nbsp;(standing)<span class="en">(6.3)</span>
+<span class="where">The standing rule detects device-relative tracking (head near zero) and lifts it to a typical eye height; a floor-relative headset is left unchanged. <i>Recenter</i> clears the calibration and re-centres the player under the head.</span></div>
+
+<h2>Room-Scale Head Following</h2>
+<p>When the player physically walks, the head moves away from the body collider. If nothing corrected this, enemies would aim at the wrong place and walls would not stop the player. <code>FollowHead</code> ([[l-follow]]) moves the CharacterController towards the head's horizontal position through <code>CharacterController.Move</code>, which respects walls, and shifts the camera pivot back by the distance actually moved, so that the camera does not jump.</p>
+<div class="eq">&Delta; = proj<sub>XZ</sub>(p<sub>camera</sub> &minus; p<sub>body</sub>), &nbsp; m = CC.Move(&Delta;), &nbsp; o &larr; o &minus; proj<sub>XZ</sub>(m)<span class="en">(6.4)</span>
+<span class="where">If |&Delta;| &lt; 2 cm nothing happens, which filters out head sway. If a wall blocks the move, m is shorter than &Delta;, and the body stays at the wall.</span></div>
+<code-file src="Assets/Scripts/Player/PlayerController.cs" lines="570-585" cap="PlayerController.FollowHead &ndash; keeping the collision capsule under the tracked head" id="l-follow"/>
+
+<h2>Turning about the Head</h2>
+<p>A snap or smooth turn rotates the player object about its own origin. In room-scale play the head is usually not above that origin, so rotating the body would swing the view sideways. That is disorienting and a known sickness trigger. The rig measures the head's horizontal displacement caused by the rotation and cancels it by moving the pivot ([[l-turn]]), so the rotation happens about the head:</p>
+<div class="eq">d = proj<sub>XZ</sub>( R<sub>y</sub>(&Delta;&psi;)&thinsp;r &minus; r ), &nbsp;&nbsp; o &larr; o &minus; d<span class="en">(6.5)</span>
+<span class="where">r: the vector from the body origin to the head; &Delta;&psi;: the turn angle (45&deg; by default for snap turns). The Mock Runtime test showed a single 45&deg; step (0&deg; &rarr; 315&deg;).</span></div>
+<code-file src="Assets/Scripts/Player/PlayerController.cs" lines="220-235" cap="PlayerController.DoLook (VR branch) &ndash; snap or smooth turn about the head" id="l-turn"/>
+
+<h2>Hand Pose and Gesture Geometry</h2>
+<p>For controller-free play, <code>HandTracking</code> derives an aim pose and two gestures from the joint positions ([[l-hands]]). [[t-gesture]] lists the thresholds. The pinch has two thresholds (hysteresis), so a pinch is a small state machine: it starts below 2.0 cm and ends only above 3.5 cm. Fluctuations between the two thresholds therefore cannot produce repeated clicks.</p>
+<table data-cap="Hand-tracking geometry and thresholds" id="t-gesture" class="compact">
+<tr><th style="width:24%">Quantity</th><th>Definition</th><th style="width:28%">Threshold / value</th></tr>
+<tr><td>Pinch distance</td><td>|p<sub>ThumbTip</sub> &minus; p<sub>IndexTip</sub>|</td><td>Pinch on &lt; 0.020 m; off &gt; 0.035 m</td></tr>
+<tr><td>Open palm</td><td>Each fingertip's distance from the palm joint, and the thumb spread</td><td>Index &gt; 0.075 m, middle &gt; 0.08 m, ring &gt; 0.075 m, little &gt; 0.06 m, pinch distance &gt; 0.06 m</td></tr>
+<tr><td>Palm trigger</td><td>Open palm held continuously, latched until the hand closes</td><td>&ge; 0.4 s</td></tr>
+<tr><td>Aim pose position</td><td>Midpoint of the palm and the middle proximal knuckle</td><td>&ndash;</td></tr>
+<tr><td>Aim pose forward</td><td>LookRotation(p<sub>knuckle</sub> &minus; p<sub>wrist</sub>, up)</td><td>The weapon follows the back of the hand</td></tr>
+</table>
+
+<h2 id="s-mr-spatial">Mixed Reality: Spatial Understanding of the Room</h2>
+<p>In MR mode the virtual enemies must move inside the user's real room. The game builds its spatial model of the room from the <b>play-area boundary</b> that the user drew during headset set-up. <code>RoomPolygon</code> queries every running <code>XRInputSubsystem</code> for <code>TryGetBoundaryPoints</code>. If a polygon with at least three points is returned, it is used (<code>UsedRealBoundary = true</code>); otherwise a 3.5 &times; 3.5 m square is used as a fallback. <code>BuildRoom</code> ([[l-buildroom]]) then:</p>
+<ol>
+<li>computes the centroid c of the polygon;</li>
+<li>adds an invisible floor collider (40 &times; 1 &times; 40 m, top at y = 0) on the Environment layer;</li>
+<li>for every edge from a to b of length L &ge; 5 cm, adds an invisible wall collider (0.3 &times; 3 &times; (L + 0.3) m) at the edge midpoint, pushed 0.15 m outward along normalise(mid &minus; c) and oriented along the edge;</li>
+<li>places N = 12 spawn points at equal arc-length intervals d<sub>k</sub> = P&middot;k/N around the perimeter P, each pulled towards the centroid by min(0.5 m, 0.4&middot;|c &minus; p|);</li>
+<li>marks the NavMesh as stale, so that <code>ArenaManager</code> rebuilds it from the new colliders and enemies plan paths inside the real room.</li>
+</ol>
+<figure id="f-mr-room" class="w70"><include src="mr_room.svg.html"/><figcaption>The room model produced by <code>BuildRoom</code> for the 3.5 &times; 3.5 m fallback room recorded during verification, computed with the same algorithm: boundary (dashed), wall colliders (grey) and spawn points 0&ndash;11 (magenta). On a Quest the user's own boundary polygon replaces the square.</figcaption></figure>
+<code-file src="Assets/Scripts/VR/MixedReality.cs" lines="105-123,125-194" cap="MixedReality.RoomPolygon and BuildRoom &ndash; boundary query, wall colliders and spawn points" id="l-buildroom"/>
+<p><b>Measured outcome.</b> In the Mock Runtime session the MR mode produced <code>RoomSize = (3.50, 3.50)</code>, 4 wall colliders, 12 spawn points and a rebuilt NavMesh, and the first enemy spawned 2.5 m from the player inside the room ([[f-vr-mr]]). The Mock Runtime provides no boundary, so the fallback path was exercised. The real-boundary path uses the same code with the polygon from the headset.</p>
+<p><b>Limitation.</b> The boundary describes the free floor area, not furniture or wall geometry. Scene understanding (Meta's scene model, planes and meshes) would allow enemies to appear behind real furniture; this is listed as future work.</p>
+
+<h2>Collision Detection and Physics Layers</h2>
+<p>Every body that moves under player or AI control uses a Unity <code>CharacterController</code> capsule (the player: radius 0.35 m, height 1.8 m; enemies: per type, e.g. a grunt has radius 0.4 m and height 1.5 m), whose move-and-slide resolves collisions against static geometry. Gameplay queries use explicit raycasts with layer masks. [[t-layers]] lists the layers and [[l-layers]] the runtime collision matrix.</p>
+<table data-cap="Physics layers" id="t-layers" class="compact">
+<tr><th class="num" style="width:8%">Layer</th><th style="width:16%">Name</th><th>Contents and purpose</th></tr>
+<tr><td class="num">5</td><td>UI</td><td>VR menu rows (hit by the hand ray only)</td></tr>
+<tr><td class="num">8</td><td>Player</td><td>Player CharacterControllers</td></tr>
+<tr><td class="num">9</td><td>Enemy</td><td>Enemy bodies</td></tr>
+<tr><td class="num">10</td><td>Environment</td><td>Arena, range and island geometry; MR floor and walls; the source of the NavMesh</td></tr>
+<tr><td class="num">11</td><td>FX</td><td>Debris and grenades (never collide with actors or other FX)</td></tr>
+<tr><td class="num">12</td><td>EnemyHead</td><td>Head hit boxes (trigger-like: hit only by weapon raycasts)</td></tr>
+<tr><td class="num">13 / 14</td><td>P1Body / P2Body</td><td>Visible player bodies, each hidden from its own camera in split screen</td></tr>
+</table>
+<code-file src="Assets/Scripts/Core/Layers.cs" lines="21-37" cap="Layer masks and the runtime collision matrix" id="l-layers"/>
+<table data-cap="Spatial queries used by the game" id="t-queries" class="compact">
+<tr><th style="width:21%">Query</th><th style="width:26%">Call and mask</th><th>Spatial reasoning performed</th></tr>
+<tr><td>Hitscan weapons</td><td><code>Physics.Raycast</code>, ShootMask, range 45&ndash;160 m</td><td>One ray per pellet inside a cone of half-angle &sigma; (Eq. 6.6); the first hit decides; <code>HitZone</code> multipliers give headshots &times;2.4 (most enemies), &times;1.8 (tank, drone) or &times;1.6 (boss); damage falls off linearly with distance</td></tr>
+<tr><td>VR laser sight</td><td><code>Raycast</code>, ShootMask, 30 m</td><td>Ends the visible laser at the first surface</td></tr>
+<tr><td>VR menu pointer</td><td><code>Raycast</code>, UI layer, 6 m</td><td>Selects the menu row under the hand ray</td></tr>
+<tr><td>Arrow flight</td><td>Up to 8 sub-stepped raycasts per frame, Environment</td><td>A swept path (segments of at most 0.75 m) so fast arrows never pass through thin targets; arrows stick at the hit point</td></tr>
+<tr><td>Enemy line of sight</td><td><code>Physics.Linecast</code>, EnvMask</td><td>Decides whether a gunner fires or flanks, and whether a sniper's perch is valid</td></tr>
+<tr><td>Navigation</td><td><code>NavMesh.SamplePosition</code>, <code>CalculatePath</code></td><td>Projects positions onto the NavMesh and plans a corner path, re-planned every 0.3&ndash;0.5 s</td></tr>
+<tr><td>Parachute altitude</td><td>Downward <code>Raycast</code>, 8,000 m, EnvMask</td><td>Altitude above ground (AGL) for the deploy window, auto-deploy, flare prompt and landing</td></tr>
+<tr><td>Farm Sniper bullets</td><td>Swept raycasts per frame</td><td>820 m/s bullets with gravity drop and travel time</td></tr>
+</table>
+<div class="eq"><b>d</b> = normalise( <b>f</b> + r<sub>x</sub>&thinsp;<b>right</b> + r<sub>y</sub>&thinsp;<b>up</b> ), &nbsp;&nbsp; (r<sub>x</sub>, r<sub>y</sub>) ~ U(unit disc) &middot; tan &sigma;<span class="en">(6.6)</span>
+<span class="where">&sigma; is interpolated between the hip spread and the ADS spread by the aim amount (e.g. 2.6&deg; &rarr; 0.45&deg; for the rifle) and multiplied by the player's movement state. Each of the scatter cannon's 9 pellets draws its own direction.</span></div>
+
+<h2>Spatial Interaction Capabilities: Summary</h2>
+<table data-cap="Spatial interaction capabilities and their verification status" class="compact">
+<tr><th style="width:30%">Capability</th><th>Mechanism</th><th style="width:20%">Status</th></tr>
+<tr><td>6DoF head tracking drives the stereo camera</td><td>CenterEye pose &rarr; camera (Eq. 6.2)</td><td><span class="st-mock">Verified (Mock XR)</span></td></tr>
+<tr><td>6DoF hand / controller tracking</td><td>Grip pose &rarr; hand transforms; weapon and bow aimed by the hand</td><td><span class="st-mock">Verified (Mock XR)</span></td></tr>
+<tr><td>Articulated hand tracking and gestures</td><td>XR Hands joints &rarr; aim pose, pinch, open palm</td><td><span class="st-hw">Needs hardware</span></td></tr>
+<tr><td>Seated / standing calibration and recenter</td><td>Height offset (Eq. 6.3)</td><td><span class="st-mock">Standing path verified</span></td></tr>
+<tr><td>Room-scale walking</td><td>FollowHead (Eq. 6.4)</td><td><span class="st-ok">Implemented</span>; needs a walking user</td></tr>
+<tr><td>Comfortable rotation about the head</td><td>Pivot compensation (Eq. 6.5)</td><td><span class="st-mock">Verified (Mock XR)</span></td></tr>
+<tr><td>Ray-based selection of world-space UI</td><td>UI-layer raycast from the hand</td><td><span class="st-mock">Verified (Mock XR)</span></td></tr>
+<tr><td>MR room registration</td><td>Boundary &rarr; walls, spawn points, NavMesh</td><td><span class="st-mock">Logic verified</span>; real boundary <span class="st-hw">needs hardware</span></td></tr>
+<tr><td>Physical collision of bodies</td><td>CharacterController capsules and layers</td><td><span class="st-ok">Verified</span></td></tr>
+</table>
