@@ -389,7 +389,10 @@ NeonBreach/
 ├── Packages/                manifest.json + packages-lock.json
 ├── ProjectSettings/         Unity project settings (Input System only, 3 scenes in Build Settings)
 └── Docs/
+    ├── NEON_BREACH_Final_ESE_Project_Report.pdf
+    ├── NeonBreach_ESE_Project_Report.pdf
     ├── NeonBreach_Project_Report.pdf / .docx
+    ├── ESE_Report/          HTML/CSS/Mermaid source, editor & runtime captures, build/
     └── Screenshots/         menus · tutorial · shooter · archery · parachute · rat_shooter · farm_sniper
 ```
 
@@ -657,7 +660,7 @@ Protect the crops: eliminate 15 rats before time runs out.
 | Mode | What it is | Where |
 |---|---|---|
 | **Shooter** | Wave shooter: endless waves, 3 weapons, grenades, 6 enemy types, shop, power-ups, 2 arenas, co-op | `Core/`, `Enemies/`, `Weapons/` |
-| **Archery** | Neon range with concentric-ring targets at 10/20/30/40 m (static, sliding on rails, pop-up). 3 rounds × 10 arrows; the wind changes every round (HUD arrow + m/s, flags on the range). Hold to draw (0→1 in ~1 s), release to shoot. Custom arrow ballistics (gravity, drag, wind, swept raycasts, no Rigidbody). Arrows stick, quiver and fade. Scoring: 50 for a bullseye, then 10/8/6/4/2; streak bonus (+10 % per consecutive hit, max +50 %); moving targets ×1.5 (rail) / ×1.25 (pop-up). Zoom narrows the FOV and adds breath sway; hold Shift to steady it (limited breath). Round summary, then final results | `Modes/ArcheryMode.cs`, `Arrow.cs`, `ArcheryTarget.cs`, `WindSystem.cs` |
+| **Archery** | Neon range with concentric-ring targets at 10/20/30/40 m (static, sliding on rails, pop-up). 3 rounds × 10 arrows; the wind changes every round (HUD arrow + m/s, flags on the range). Hold to draw (0→1 in ~1 s), release to shoot. Custom arrow ballistics (gravity, drag, wind, swept raycasts, no Rigidbody) plus a live dotted trajectory guide while drawing (`Arrow.Predict`) that reflects draw strength, gravity and wind. Arrows stick, quiver and fade. Scoring: 50 for a bullseye, then 10/8/6/4/2; streak bonus (+10 % per consecutive hit, max +50 %); moving targets ×1.5 (rail) / ×1.25 (pop-up). Zoom narrows the FOV and adds breath sway; hold Shift to steady it (limited breath). Round summary, then final results | `Modes/ArcheryMode.cs`, `Arrow.cs`, `ArcheryTarget.cs`, `WindSystem.cs` |
 | **Parachute** | Jump from a plane at 3,000 m above a procedural island (height-field mesh + generated colour map, beaches, mountain, forests, ocean, landing pad with a light beacon). Wait in the door for the green light, then jump. Free fall uses gravity + quadratic air drag (≈50 m/s belly-to-earth; hold Shift for a head-down dive up to ≈85 m/s, Ctrl/C for a spread eagle down to ≈36 m/s; WASD tracks, the mouse turns and leans). 12 rings, coins, drifting balloons and bird flocks. Below 2,000 m an interactive **OPEN PARACHUTE** button appears (Space / R ripcord / click; altimeter beeps; auto-deploy at 300 m AGL costs 250 points). Then canopy flight with front risers, brakes and a flare, and a landing sequence (knee bend, run-out, canopy collapse). Desktop uses a third-person chase camera with a procedurally animated skydiver (V toggles first person); VR stays first person. Every threshold and control is set in the Inspector (`SkydiveSettings`). Score = rings + coins + landing accuracy (up to 1000) + softness (up to 400) + time bonus | `Modes/ParachuteMode.cs`, `ParachuteController.cs`, `SkydiveSettings.cs`, `SkydiverRig.cs`, `Ring.cs` |
 | **Rat Shooter** | Separate cartoon scene: shoot sneaky mice from the farmhouse porch. 5 levels, 5 kinds of mice with their own AI personalities, combo and headshot scoring, reload, aim down sights | `Assets/RatShooter/` |
 | **Farm Sniper** | Separate scene: protect the farm with a scoped bolt-action rifle. Simulated bullets, rats that feed on crops, flee, hide and peek, ammo crates, VR support | `Assets/FarmSniper/` |
@@ -698,6 +701,7 @@ Switching modes: main-menu buttons, pause menu → **SWITCH MODE**, the results 
 | **Interactive first-run tutorial** (look, move, sprint + jump, shoot targets, reload, ADS, grenade, power-up) that adapts to keyboard / gamepad / VR controllers / hands | `Tutorial.cs`, `TrainingTarget.cs` |
 | **Settings**: gameplay, graphics (quality level, post FX, bloom, vsync, fullscreen, FPS), audio (HRTF), **key rebinding**, VR comfort, **language** (English / Español / Français / Deutsch) | `HUDMenus.cs`, `KeyBindings.cs`, `Loc.cs` |
 | **Gameplay analytics** after game over: death **heat map** over a top-down map of the arena (all runs), **damage dealt vs taken over time**, kills per enemy type, accuracy per weapon | `HUDGameOver.cs`, `Stats.cs` |
+| **UI transitions and hover polish**: smooth screen fade-in on menu entry, mission/mode start and results screens, plus pulsing hover glow and accent bars on buttons and mode cards | `HUD.cs`, `HUDModes.cs`, `GameManager.cs` |
 
 ### Rat Shooter details
 
@@ -767,7 +771,9 @@ Rebuilding the generated levels: **Neon Breach → Rat Shooter → Build Rat Sho
 
 ## 6. VR and mixed reality setup
 
-1. **Neon Breach → VR → 1 - Open XR Plug-in Management** and tick **OpenXR** (PC tab; also the Android tab for a standalone Quest build).
+Standalone OpenXR loader, controller profiles (Touch, Quest Touch Plus/Pro, Index, Vive) and Hand Tracking features are pre-enabled in `Assets/XR/`. To verify or add Android/Quest settings:
+
+1. **Neon Breach → VR → 1 - Open XR Plug-in Management** and ensure **OpenXR** is ticked (PC tab; also the Android tab for a standalone Quest build).
 2. **Neon Breach → VR → 2 - Configure OpenXR features** enables the controller profiles (Touch, Index, Vive), the Hand Tracking Subsystem + Meta Hand Tracking Aim, and on Android the Meta Quest support, Meta session and camera (passthrough) features.
 3. Fix anything listed under **Project Validation** in XR Plug-in Management.
 4. PC VR (Quest Link / SteamVR): press Play with the headset on. Quest standalone / mixed reality: switch the build target to Android and use **Neon Breach → Build Standalone Player**, then turn on *Mixed Reality* in the in-headset menu.
@@ -777,7 +783,7 @@ Rebuilding the generated levels: **Neon Breach → Rat Shooter → Build Rat Sho
 - **Input abstraction:** gameplay reads only `PlayerInputState`. Keyboard, gamepad, VR controllers and hand gestures all fill it.
 - **Procedural content:** textures, sounds, music, models and all arenas and levels are generated in code.
 - **Runtime NavMesh:** arenas can be swapped at runtime (and MR builds a room from the guardian), so the NavMesh is built with `NavMeshSurface.BuildNavMesh()` instead of being baked.
-- **VR comfort by design:** no camera shake or recoil in VR, slow motion affects only enemies, turning rotates around the head, vignette + snap-turn blink.
+- **VR comfort by design:** no camera shake or recoil in VR, slow motion affects only enemies, turning rotates around the head, vignette + snap-turn blink, and `Util.SetFov` skips camera FOV changes when rendering in stereo (`!cam.stereoEnabled`).
 - **Modes reuse the shooter's systems:** `PlayerController` has small hooks (`Driver` for parachute flight; `FovOverride`, `AimOffset`, `LookScale` and `BlockSprint` for the bow). `GameManager` has `BeginModeRun` / `EndModeRun` and calls `ModeManager.ReturnToShooter()` before any shooter state change. The mode worlds are generated when the mode starts, not baked into the scene.
 - **Separate games stay separate:** Rat Shooter and Farm Sniper live in their own folders and scenes. The only changes to the main game were the Rat Shooter menu button (`HUDMenus.cs`), `GameBootstrap` skipping scenes with a `StandaloneSceneMarker`, and `SceneBuilder` keeping other scenes in Build Settings.
 - **Optimisation (measured with the F4 panel):** all generated Standard materials use **GPU instancing**. Neon (emissive) parts cast **no shadows** (`Util.Part` + `Perf.NeonNoShadows`). With the same camera pose on Ultra quality: arena shadow casters went from 277 to 95 and triangles from 16.7k to 12.7k; on the archery range, draw calls went from 772 to 691 and shadow casters from 441 to 214. Runtime static batching (`Perf.BatchStatic`) was also tried and *raised* draw calls (arena 321 → 453, range 691 → 812), because batched meshes lose instancing and are still drawn once per per-pixel light, so `Perf.BatchingEnabled` is off by default. Other measures: pooled audio sources (32), one procedural texture / material per name (cached), runtime NavMesh from colliders only, IMGUI HUD without canvases. Frame time on the development PC is ≈2.5-3.5 ms (≈300-400 FPS), well inside the 11.1 ms budget of a 90 Hz headset.
@@ -814,4 +820,4 @@ Rebuilding the generated levels: **Neon Breach → Rat Shooter → Build Rat Sho
 
 ---
 
-<div align="center"><sub>Neon Breach · AR/VR end-semester project · project report in <a href="Docs/NeonBreach_Project_Report.pdf">Docs/NeonBreach_Project_Report.pdf</a></sub></div>
+<div align="center"><sub>Neon Breach · AR/VR end-semester project · project reports in <a href="Docs/NEON_BREACH_Final_ESE_Project_Report.pdf">Docs/NEON_BREACH_Final_ESE_Project_Report.pdf</a> and <a href="Docs/NeonBreach_Project_Report.pdf">Docs/NeonBreach_Project_Report.pdf</a></sub></div>
