@@ -1,7 +1,7 @@
 <h1 class="chap" data-chap="11" data-crit="10" id="ch11">Final Demonstration &amp; Presentation</h1>
 <div class="evidence"><b class="h">Evidence in this chapter</b>
 <ul><li>Set-up checklist and the execution procedure for the demonstration machine ([[t-setup]]).</li>
-<li>A timed 15-minute demonstration script covering the main menu and all four game modes ([[t-demo]]).</li>
+<li>A timed 15-minute demonstration script that opens with the cinematic startup intro and covers the main menu and all four game modes ([[t-demo]]).</li>
 <li>The features to show in each mode with the expected outcome and the result observed in the rehearsal run of 27 Nov 2026 ([[t-demo-features]]).</li>
 <li>A map from each rubric criterion to the moment of the demonstration that evidences it, technical talking points and a contingency plan ([[t-demo-map]]).</li></ul></div>
 
@@ -14,22 +14,18 @@
 <tr><td>4</td><td>Mouse, keyboard, and a gamepad for co-op (optional)</td><td>Gamepad detected in the mission set-up</td></tr>
 <tr><td>5</td><td>Audio output on, master volume about 70&nbsp;%</td><td>Click and ambience sounds audible</td></tr>
 <tr><td>6</td><td>Optional: OpenXR headset connected and set as the active OpenXR runtime</td><td>&ldquo;VR headset detected&rdquo; on the desktop menu</td></tr>
-<tr><td>7</td><td>Backup: a Windows player built beforehand with <i>Neon Breach &gt; Build Standalone Player</i> (no player build is included in the submitted folder), and this report's screenshots</td><td>Build starts from Explorer</td></tr>
+<tr><td>7</td><td>Backup: a Windows player built beforehand (<i>Neon Breach &gt; Build Standalone Player</i>) and this report's screenshots</td><td>Build starts from Explorer</td></tr>
 <tr><td>8</td><td>Do <b>not</b> run the automated smoke test on the demo machine (it resets the saved best scores)</td><td>Best scores visible on the menu</td></tr>
 </table>
 
 <h2>Execution Procedure</h2>
-<ol>
-<li>Open Unity Hub &rarr; NEON BREACH project &rarr; wait for the Editor to finish importing.</li>
-<li>Open <code>Assets/Scenes/NeonBreach.unity</code> and press <b>Play</b> (or <i>Neon Breach &gt; Play From Start</i>).</li>
-<li>The main menu appears with the arena orbiting behind it. Use the mouse to select a mode; Esc pauses any mode; F5/F6/F7 switch between the in-scene modes; F1 shows the help overlay; F4 the performance overlay.</li>
-<li>To finish, choose MAIN MENU and QUIT (or stop Play mode in the Editor).</li>
-</ol>
+<p>Open the project in Unity Hub and wait for the import; open <code>Assets/Scenes/NeonBreach.unity</code> and press <b>Play</b> (or <i>Neon Breach &gt; Play From Start</i>). The cinematic intro plays (about 10 s; Esc or SKIP INTRO ends it early), then the main menu fades in with the arena orbiting behind it. Select modes with the mouse; Esc pauses, F5/F6/F7 switch between the in-scene modes, F1 shows help and F4 the performance overlay. Finish with MAIN MENU &rarr; QUIT, or stop Play mode.</p>
 
 <h2>Timed Demonstration Script</h2>
 <table data-cap="Fifteen-minute demonstration script" id="t-demo" class="compact">
 <tr><th style="width:11%">Time</th><th style="width:22%">Segment</th><th>What to do and say</th></tr>
-<tr><td>0:00&ndash;1:30</td><td>Introduction</td><td>Problem statement, objectives, the four game modes and the single shared framework; show the main menu and its hover feedback, best scores and the mission set-up</td></tr>
+<tr><td>0:00&ndash;0:15</td><td>Cinematic intro</td><td>Press Play with the sound on: the curtains open, the title ignites and the intro hands over to the menu; point out that it is generated entirely in code</td></tr>
+<tr><td>0:15&ndash;1:30</td><td>Introduction</td><td>Problem statement, objectives, the four game modes and the single shared framework; show the main menu and its hover feedback, best scores and the mission set-up</td></tr>
 <tr><td>1:30&ndash;4:30</td><td>Shooter</td><td>Start a mission: movement (sprint, slide, dash), the three weapons (keys 1&ndash;3), aim down sights, a grenade, hit markers and damage numbers, enemy hit flash and knock-back, the shield tank; clear a wave and show the shop; pause menu</td></tr>
 <tr><td>4:30&ndash;7:00</td><td>Archery</td><td>Switch with F6 (fade transition). Draw slowly to show the <b>trajectory guide</b> changing with draw strength; read the wind panel; zoom and hold breath; hit a bullseye; show the streak multiplier and the round summary</td></tr>
 <tr><td>7:00&ndash;10:00</td><td>Parachute</td><td>Switch with F7. Jump on the green light, track and turn through 360&deg; with the mouse, dive and slow down (terminal velocity changes), collect a ring, wait for the OPEN PARACHUTE prompt in the deploy window, steer to the pad, flare and land; show the results and landing accuracy</td></tr>
@@ -39,8 +35,10 @@
 </table>
 
 <h2>Features to Demonstrate in Each Mode</h2>
-<table data-cap="Features to demonstrate, expected outcome and rehearsal result (27 Nov 2026)" id="t-demo-features" class="compact">
+<table data-cap="Features to demonstrate, expected outcome and rehearsal result (27 and 28 Nov 2026)" id="t-demo-features" class="compact">
 <tr><th style="width:12%">Mode</th><th style="width:30%">Feature</th><th>Expected outcome</th><th style="width:15%">Rehearsal</th></tr>
+<tr><td rowspan="2">Intro</td><td>Curtains, title reveal, sound</td><td>Plays on Play; hands over to the menu after 9.6 s with the menu fading in</td><td><span class="st-ok">Observed</span> (28 Nov)</td></tr>
+<tr><td>Skip</td><td>Esc / SKIP INTRO ends it with a 0.45 s fade; not replayed on return to the menu</td><td><span class="st-ok">Observed</span> (28 Nov)</td></tr>
 <tr><td rowspan="2">Menu</td><td>Mode buttons, hover feedback, best scores</td><td>Glow and accent bar on hover; best scores of all four modes</td><td><span class="st-ok">Observed</span></td></tr>
 <tr><td>Transitions</td><td>Fade from black on every mode start; scene fade to the Rat Shooter</td><td><span class="st-ok">Observed</span></td></tr>
 <tr><td rowspan="2">Shooter</td><td>Wave start, HUD, weapons</td><td>Wave banner, hostiles count, health/ammo bars</td><td><span class="st-ok">Observed</span></td></tr>
@@ -58,13 +56,13 @@
 <tr><th style="width:5%">#</th><th style="width:33%">Criterion</th><th>Demonstration moment</th></tr>
 <tr><td>1</td><td>Problem, objectives, requirements</td><td>Introduction; objectives table in Chapter 2</td></tr>
 <tr><td>2</td><td>Literature and background</td><td>Comfort vignette and snap turn (cybersickness research); ray-cast VR menu; binaural audio</td></tr>
-<tr><td>3</td><td>Architecture and design</td><td>Mode switching without reloading; Rat Shooter scene load; architecture diagram</td></tr>
+<tr><td>3</td><td>Architecture and design</td><td>Mode switching without reloading; Rat Shooter scene load; the intro's hand-over to the menu; architecture diagram</td></tr>
 <tr><td>4</td><td>AR/VR implementation</td><td>OpenXR configuration screens, VR rig, Mock Runtime frames, headset if available</td></tr>
 <tr><td>5</td><td>Tracking and registration</td><td>Coordinate chain and room-scale following (Chapter 6); collision and raycast hits in every mode</td></tr>
-<tr><td>6</td><td>3D modelling and environment</td><td>Four procedurally built worlds, lighting and effects</td></tr>
-<tr><td>7</td><td>Interaction and UI/UX</td><td>Menus, HUDs, transitions, trajectory guide, settings and tutorial</td></tr>
-<tr><td>8</td><td>Advanced features</td><td>Arrow and free-fall physics, enemy and mouse AI, haptics and comfort</td></tr>
-<tr><td>9</td><td>Technical documentation</td><td>This report, test plan and build procedure</td></tr>
+<tr><td>6</td><td>3D modelling and environment</td><td>The intro's procedural theatre stage; four procedurally built worlds, lighting and effects</td></tr>
+<tr><td>7</td><td>Interaction and UI/UX</td><td>Cinematic intro and skip; menus, HUDs, transitions, trajectory guide, settings and tutorial</td></tr>
+<tr><td>8</td><td>Advanced features</td><td>Spring-driven curtain animation and synchronised neon ignition; arrow and free-fall physics, enemy and mouse AI, haptics and comfort</td></tr>
+<tr><td>9</td><td>Technical documentation and report</td><td>This report, test plan and build procedure; the intro's Inspector settings</td></tr>
 <tr><td>10</td><td>Demonstration</td><td>The script above</td></tr>
 </table>
 
@@ -75,7 +73,8 @@
 <li><b>How is free fall modelled?</b> Drag is set so that it equals gravity at the terminal velocity of the current body position (Equation 9.2), so the speed settles smoothly when the posture changes.</li>
 <li><b>How do the mice decide to flee?</b> Each shot is broadcast with its ray and impact point; each mouse measures its distance to both and panics, startles or ignores it depending on distance and its boldness.</li>
 <li><b>What is verified in VR and what is not?</b> The OpenXR pipeline was executed end to end with the Mock Runtime; on-device performance, hand-tracking robustness and passthrough need a real headset (Chapter 10).</li>
-<li><b>Where are the assets?</b> Everything is generated in code; editor builders save the generated scenes and meshes.</li>
+<li><b>Where are the assets?</b> Everything is generated in code; editor builders save the generated scenes and meshes. Even the intro's velvet, valance, floor grid and its music are generated at start-up.</li>
+<li><b>How does a uGUI intro hand over to an IMGUI menu?</b> IMGUI always draws over uGUI, so the intro disables only the HUD component while it plays, ends on the HUD's own fade colour and re-enables it with the HUD's existing fade-in; the menu code was not changed.</li>
 </ul>
 
 <h2>Contingency Plan</h2>
@@ -83,5 +82,6 @@
 <li><b>Editor fails to open or import is slow:</b> run the pre-built Windows player, or present from the screenshots in this report.</li>
 <li><b>No headset or runtime problem:</b> show the Mock Runtime VR frames and the OpenXR configuration screens (Chapter 5); state clearly that on-device testing is future work.</li>
 <li><b>Low frame rate on the projector:</b> lower the Game-view resolution; frame time is normally around 3 ms.</li>
+<li><b>Time is short:</b> press Esc during the intro to go straight to the menu; it does not replay later in the session.</li>
 <li><b>Input not reaching the Game view:</b> click inside the Game view to give it focus (the Input System only sends mouse and keyboard input to a focused Game view).</li>
 </ul>

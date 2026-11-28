@@ -8,7 +8,6 @@
   <img class="hero" src="../img/r/menus__01_main_menu.jpg" alt="Neon Breach main menu">
   <div class="who">
     <div><h4>Submitted by</h4>Yash Sawant <span>&nbsp;MIS 642402009</span><br>Shivprakash Chavan <span>&nbsp;MIS 612302059</span></div>
-    <div><h4>Under the guidance of</h4>Shubhagi Tamsekar Ma&rsquo;am</div>
   </div>
   <div class="foot">Academic Year 2026&ndash;27 &nbsp;&middot;&nbsp; November 2026</div>
 </section>
@@ -16,62 +15,19 @@
 <section class="front">
 <h1 class="unnum" id="abstract">Abstract</h1>
 <p><b>NEON BREACH</b> is an immersive first-person game project built in Unity 6 (6000.5.5f1) for the Augmented and Virtual Reality course. It addresses a common weakness of student XR projects: a single demonstration scene that runs on one device, ignores comfort and performance, and cannot be evaluated without the headset it was built for. The project delivers <b>four game modes in one code base</b>, all launched from one main menu: a wave-based neon arena <i>Shooter</i>, an <i>Archery</i> range with physically simulated arrows and wind, a 3,000 m <i>Parachute</i> skydive with a canopy landing, and a cartoon <i>Rat Shooter</i>; a bonus <i>Farm Sniper</i> level is included as a standalone scene. All of them share one player, input, audio and user-interface framework.</p>
-<p>The AR/VR layer is built on the <b>OpenXR</b> standard through Unity's XR Plug-in Management. The <b>XR Hands</b> package provides articulated hand tracking with gesture recognition (pinch and open palm), and <b>AR Foundation</b> with Unity's Meta OpenXR package provides a mixed-reality "breach" mode, in which the virtual arena disappears and enemies spawn along the player's real room boundary. A single <code>PlayerInputState</code> abstraction lets keyboard and mouse, gamepads, tracked controllers and bare hands drive identical gameplay code. VR comfort is designed in: a speed-driven tunnelling vignette, snap or smooth turning about the head, a seated mode, room-scale head following and no camera shake. A custom HRTF-style binaural spatializer (Woodworth interaural time difference, level difference and head-shadow filtering), controller haptics, NavMesh-driven enemy AI, quadratic-drag free-fall physics and arrow ballistics complete the feature set. Every model, texture, sound and level is generated procedurally in C# (123 scripts, about 31,000 lines).</p>
-<p>During the preparation of this report the project was audited against the ten ESE criteria. Four gaps were found and fixed: the XR loader was not enabled, a Run-In-Background setting failed XR project validation, number keys mapped to the wrong Input System keys, and VR mode logged a field-of-view warning. The complete VR input and rendering pipeline was then verified end to end, without a headset, using the OpenXR Mock Runtime and the conformance-automation extension. A final polish pass then made small, verified improvements without rebuilding anything: an archery trajectory guide that uses the arrows' exact flight model, fade transitions on every mode start and on the results screen, and animated hover feedback for every button and mode card. All four modes were re-tested after these changes with no errors or warnings. Measured results on the development PC show average frame times of 2.5&ndash;3.3 ms (about 300&ndash;400 FPS) in every mode, well inside the 11.1 ms budget of a 90 Hz headset. The report documents the requirements, the literature, the architecture, the XR implementation, tracking and spatial registration, the generated assets, the user experience, the advanced features, testing, results and the demonstration plan, with real screenshots, Unity Editor captures and source listings as evidence.</p>
+<p>The AR/VR layer is built on the <b>OpenXR</b> standard through Unity's XR Plug-in Management. The <b>XR Hands</b> package provides articulated hand tracking with gesture recognition (pinch and open palm), and <b>AR Foundation</b> with Unity's Meta OpenXR package provides a mixed-reality "breach" mode, in which the virtual arena disappears and enemies spawn along the player's real room boundary. A single <code>PlayerInputState</code> abstraction lets keyboard and mouse, gamepads, tracked controllers and bare hands drive identical gameplay code. VR comfort is designed in: a speed-driven tunnelling vignette, snap or smooth turning about the head, a seated mode, room-scale head following and no camera shake. A custom HRTF-style binaural spatializer (Woodworth interaural time difference, level difference and head-shadow filtering), controller haptics, NavMesh-driven enemy AI, quadratic-drag free-fall physics and arrow ballistics complete the feature set. Every model, texture, sound and level is generated procedurally in C# (129 scripts, about 33,400 lines).</p>
+<p>During the preparation of this report the project was audited against the ten ESE criteria. Four gaps were found and fixed: the XR loader was not enabled, a Run-In-Background setting failed XR project validation, number keys mapped to the wrong Input System keys, and VR mode logged a field-of-view warning. The complete VR input and rendering pipeline was then verified end to end, without a headset, using the OpenXR Mock Runtime and the conformance-automation extension. Two polish passes followed: an archery trajectory guide that uses the arrows' exact flight model, fade transitions and animated hover feedback (27 Nov 2026), and a <b>cinematic startup intro</b> in which velvet theatre curtains with neon piping open on a neon stage and reveal &ldquo;WELCOME TO NEON BREACH&rdquo; before the main menu (28 Nov 2026). Every change was compiled, played and measured with no errors or warnings, and a Windows player was built and run. Average frame times are 2.5&ndash;3.3 ms (about 300&ndash;400 FPS) in every mode, well inside the 11.1 ms budget of a 90 Hz headset. The report is organised by the ten evaluation criteria, one chapter per criterion, with real screenshots, Unity Editor captures and source listings as evidence.</p>
 <p class="keywords"><b>Keywords:</b> Virtual Reality, Mixed Reality, OpenXR, Unity 6, XR Hands, AR Foundation, hand tracking, spatial audio (HRTF), cybersickness, procedural content generation, NavMesh AI, game physics.</p>
 </section>
 
 <section class="front">
 <h1 class="unnum" id="ack">Acknowledgement</h1>
-<p>We express our sincere gratitude to our project guide, <b>Shubhagi Tamsekar Ma&rsquo;am</b>, for her guidance, encouragement and valuable feedback at every stage of this work. Her suggestions on the scope of the project, on immersive interaction and on the evaluation criteria shaped both the system and this report.</p>
+<p>We express our sincere gratitude to our project guide for the guidance, encouragement and valuable feedback given at every stage of this work. The suggestions on the scope of the project, on immersive interaction and on the evaluation criteria shaped both the system and this report.</p>
 <p>We thank the faculty and staff of COEP Technological University for the Augmented and Virtual Reality course, which introduced us to the theory of tracking, registration and immersive interaction that this project puts into practice, and for the laboratory and computing facilities made available to us.</p>
 <p>We also acknowledge the open standards and documentation that made the project possible: the Khronos Group's OpenXR specification, and Unity Technologies' documentation for XR Plug-in Management, OpenXR, XR Hands, AR Foundation, the Input System and AI Navigation.</p>
 <p>Finally, we thank our families and friends for their constant support throughout the semester.</p>
-<p style="margin-top:14mm; text-align:right">Yash Sawant (MIS 642402009)<br>Shivprakash Chavan (MIS 612302059)</p>
-</section>
-
-<section class="front">
-<h1 class="unnum" id="toc" data-toc="no">Table of Contents</h1>
-<toc-here/>
-</section>
-
-<section class="front">
-<h1 class="unnum" id="lof">List of Figures</h1>
-<lof-here/>
-</section>
-
-<section class="front">
-<h1 class="unnum" id="lot">List of Tables</h1>
-<lot-here/>
-<h1 class="unnum" id="lol" style="margin-top:10mm">List of Code Listings</h1>
-<lol-here/>
-</section>
-
-<section class="front">
-<h1 class="unnum" id="rubric">Rubric-to-Evidence Map</h1>
-<p>This report is organised around the ten ESE evaluation criteria. Each criterion has its own chapter (Chapters 2&ndash;11), which starts on a new page and opens with an <i>evidence box</i> listing the strongest evidence it contains. The table below lets an examiner jump straight to that evidence.</p>
-<table class="compact">
-<tr><th style="width:4%">#</th><th style="width:22%">Evaluation criterion</th><th style="width:9%">Chapter</th><th>Key evidence in this report</th></tr>
-<tr><td>1</td><td>Problem Definition, Objectives &amp; Requirements</td><td>[[ch2]]</td><td>Problem statement and motivation (11.1 ms VR frame budget, cybersickness, device fragmentation); 9 measurable objectives; 24 functional and 10 non-functional requirements with verification status; scope and expected outcomes</td></tr>
-<tr><td>2</td><td>Literature Survey &amp; Technical Background</td><td>[[ch3]]</td><td>Reality&ndash;virtuality continuum; tracking technologies; OpenXR and the Unity XR stack; cybersickness, spatial-audio, navigation and procedural-generation research; comparison with existing VR/MR applications; 30 references</td></tr>
-<tr><td>3</td><td>System Architecture &amp; Design</td><td>[[ch4]]</td><td>Layered architecture, module decomposition, class relationships, frame execution order, game state machine, mode-switching sequence, data flow, scene hierarchies captured from the Unity Editor</td></tr>
-<tr><td>4</td><td>AR/VR Technology Implementation</td><td>[[ch5]]</td><td>OpenXR configuration (gap found and fixed), 7 enabled OpenXR features, VR rig, controller mapping, XR Hands gestures, AR Foundation MR mode, haptics, world-space VR UI; <b>end-to-end VR verification with the OpenXR Mock Runtime</b> and real VR frames</td></tr>
-<tr><td>5</td><td>Tracking, Registration &amp; Spatial Understanding</td><td>[[ch6]]</td><td>Coordinate systems and the OpenXR&harr;Unity handedness conversion; transform chain with measured registration values; height calibration, room-scale head following, snap turn about the head; MR boundary registration (walls, spawn points, NavMesh); collision layers and raycasting</td></tr>
-<tr><td>6</td><td>3D Modelling, Assets &amp; Environment</td><td>[[ch7]]</td><td>Procedurally generated arenas, characters, weapons, archery range, island, farm and farmyard; materials, shaders, lighting, procedural animation, VFX; asset pipeline; measured optimisation</td></tr>
-<tr><td>7</td><td>Interaction, UI/UX &amp; User Experience</td><td>[[ch8]]</td><td>Main menu and navigation flow, HUDs of all four game modes, polish-pass hover animation, fade transitions and archery trajectory guide, 8-step tutorial, 6 settings tabs, 4 languages, VR laser-pointer menu and wrist display, controls for 3 device types, usability-heuristic review</td></tr>
-<tr><td>8</td><td>Advanced AR/VR Features</td><td>[[ch9]]</td><td>Feature matrix that separates <i>verified</i>, <i>verified in the Mock Runtime</i>, <i>needs hardware</i> and <i>planned</i>; ballistics and free-fall physics equations; NavMesh AI; binaural audio mathematics; comfort system; haptics; camera systems</td></tr>
-<tr><td>9</td><td>Technical Documentation &amp; Project Report</td><td>[[ch10]]</td><td>Measured hardware and software environment, tools, code metrics, important scripts, methodology, build steps, test plan with 25 test cases and their observed results, bugs fixed, limitations</td></tr>
-<tr><td>10</td><td>Final Demonstration &amp; Presentation</td><td>[[ch11]]</td><td>Demo set-up checklist, execution procedure, a timed 15-minute script, features to show in each mode with expected outcomes and rehearsal results, a criterion-to-demo mapping, technical talking points and a contingency plan</td></tr>
-</table>
-<div class="note"><b>How to read the status labels.</b> Throughout the report, features are marked with one of four labels:
-<span class="chip ok">VERIFIED</span> ran and was checked in this project (Editor Play mode or an automated test);
-<span class="chip mock">VERIFIED (MOCK XR)</span> ran through the real OpenXR pipeline using Unity's OpenXR Mock Runtime, which simulates a headset and controllers;
-<span class="chip hw">NEEDS HARDWARE</span> implemented and compiled, but its final check needs a physical headset (for example, the passthrough camera feed);
-<span class="chip plan">PLANNED</span> a future improvement that is not implemented.</div>
-</section>
-
-<section class="front">
-<h1 class="unnum" id="abbr">Abbreviations</h1>
+<p style="margin-top:6mm; text-align:right">Yash Sawant (MIS 642402009)<br>Shivprakash Chavan (MIS 612302059)</p>
+<h1 class="unnum" id="abbr" style="margin-top:8mm">Abbreviations</h1>
 <table class="compact">
 <tr><th style="width:16%">Term</th><th>Meaning</th><th style="width:16%">Term</th><th>Meaning</th></tr>
 <tr><td>AR / VR / MR / XR</td><td>Augmented / Virtual / Mixed / Extended Reality</td><td>HMD</td><td>Head-mounted display</td></tr>
@@ -86,3 +42,40 @@
 <tr><td>PlayerPrefs</td><td>Unity's persistent key&ndash;value store (settings, scores)</td><td>Mock Runtime</td><td>Unity OpenXR Mock Runtime (simulated OpenXR device)</td></tr>
 </table>
 </section>
+
+<section class="front">
+<h1 class="unnum" id="toc" data-toc="no">Table of Contents</h1>
+<toc-here/>
+</section>
+
+<section class="front">
+<h1 class="unnum" id="lof">List of Figures</h1>
+<lof-here/>
+<h1 class="unnum" id="lot" style="margin-top:5mm">List of Tables</h1>
+<lot-here/>
+</section>
+
+<section class="front">
+<h1 class="unnum" id="rubric">Evaluation Criteria and Evidence Map</h1>
+<p>The End-Semester Examination evaluates the project on ten criteria of 5 marks each (total 50). This report gives every criterion its own chapter (Chapters 2&ndash;11, in rubric order). Each of these chapters starts on a new page with the criterion's name in bold at the top centre, the rubric's <i>Excellent</i> descriptor, and an <i>evidence box</i> listing the strongest evidence it contains. The table below lets an examiner jump straight to that evidence.</p>
+<table class="compact">
+<tr><th style="width:4%">#</th><th style="width:22%">Evaluation criterion</th><th style="width:7%">Marks</th><th style="width:9%">Chapter</th><th>Key evidence in this report</th></tr>
+<tr><td>1</td><td>Problem Definition, Objectives &amp; Requirements</td><td>5</td><td>[[ch2]]</td><td>Problem statement and motivation (11.1 ms VR frame budget, cybersickness, device fragmentation); 9 measurable objectives; 24 functional and 10 non-functional requirements with verification status; scope and expected outcomes</td></tr>
+<tr><td>2</td><td>Literature Survey &amp; Technical Background</td><td>5</td><td>[[ch3]]</td><td>Reality&ndash;virtuality continuum; tracking technologies; OpenXR and the Unity XR stack; cybersickness, spatial-audio, navigation and procedural-generation research; comparison with existing VR/MR applications; 30 references</td></tr>
+<tr><td>3</td><td>System Architecture &amp; Design</td><td>5</td><td>[[ch4]]</td><td>Layered architecture, module decomposition with code metrics, class relationships, frame execution order, data flow, game state machine, scene and mode-switching flows, the startup-intro hand-over, scene hierarchies captured from the Unity Editor</td></tr>
+<tr><td>4</td><td>AR/VR Technology Implementation</td><td>5</td><td>[[ch5]]</td><td>OpenXR configuration (gap found and fixed), 7 enabled OpenXR features, VR rig, controller mapping, XR Hands gestures, AR Foundation MR mode, haptics, world-space VR UI; <b>end-to-end VR verification with the OpenXR Mock Runtime</b> and real VR frames</td></tr>
+<tr><td>5</td><td>Tracking, Registration &amp; Spatial Understanding</td><td>5</td><td>[[ch6]]</td><td>Coordinate systems and the OpenXR&harr;Unity handedness conversion; transform chain with measured registration values; height calibration, room-scale head following, snap turn about the head; MR boundary registration (walls, spawn points, NavMesh); collision layers and raycasting</td></tr>
+<tr><td>6</td><td>3D Modelling, Assets &amp; Environment</td><td>5</td><td>[[ch7]]</td><td>Procedurally generated arenas, characters, weapons, archery range, island, farm, farmyard and the intro's theatre stage; materials, shaders, lighting, procedural animation, VFX; asset pipeline; measured optimisation</td></tr>
+<tr><td>7</td><td>Interaction, UI/UX &amp; User Experience</td><td>5</td><td>[[ch8]]</td><td><b>Cinematic startup intro</b> with skip and hand-over to the menu, main menu and navigation flow, HUDs of all four game modes, hover animation, fade transitions, archery trajectory guide, tutorial, settings, 4 languages, VR laser-pointer menu, controls for 3 device types, usability-heuristic review</td></tr>
+<tr><td>8</td><td>Advanced AR/VR Features</td><td>5</td><td>[[ch9]]</td><td>Feature matrix against the rubric's list (animation, gesture, hand tracking, AI, anchors, image tracking) with honest status labels; ballistics and free-fall equations; spring-driven cloth animation and threaded audio synthesis of the intro; NavMesh AI; binaural audio; comfort; haptics</td></tr>
+<tr><td>9</td><td>Technical Documentation &amp; Project Report</td><td>5</td><td>[[ch10]]</td><td>Measured hardware and software environment, tools, code metrics, important scripts, methodology, build steps, test plan with observed results (including the 28 Nov intro and standalone-build tests), bugs fixed, limitations, documentation deliverables</td></tr>
+<tr><td>10</td><td>Final Demonstration &amp; Presentation</td><td>5</td><td>[[ch11]]</td><td>Demo set-up checklist, execution procedure, a timed 15-minute script that opens with the cinematic intro, features to show with expected outcomes and rehearsal results, a criterion-to-demo map, talking points and a contingency plan</td></tr>
+<tr><td></td><td><b>Total</b></td><td><b>50</b></td><td></td><td></td></tr>
+</table>
+<div class="note"><b>How to read the status labels.</b> Throughout the report, features are marked with one of four labels:
+<span class="chip ok">VERIFIED</span> ran and was checked in this project (Editor Play mode or an automated test);
+<span class="chip mock">VERIFIED (MOCK XR)</span> ran through the real OpenXR pipeline using Unity's OpenXR Mock Runtime, which simulates a headset and controllers;
+<span class="chip hw">NEEDS HARDWARE</span> implemented and compiled, but its final check needs a physical headset (for example, the passthrough camera feed);
+<span class="chip plan">PLANNED</span> a future improvement that is not implemented.</div>
+</section>
+

@@ -39,8 +39,9 @@ src = re.sub(r'<include src="([^"]+)"/>', lambda m: open(os.path.join(HERE, m.gr
 # ------------------------------------------------------------------ performance chart (inline SVG)
 def perf_chart():
     data = [("Shooter \u2013 Neon Grid", 3.3), ("Shooter \u2013 Foundry", 2.7), ("Archery range", 2.5),
-            ("Parachute (plane)", 3.0), ("Rat Shooter", 2.51), ("Farm Sniper", 2.78), ("Archery + guide (27 Nov)", 3.1)]
-    W, H = 640, 290
+            ("Parachute (plane)", 3.0), ("Rat Shooter", 2.51), ("Farm Sniper", 2.78), ("Archery + guide (27 Nov)", 3.1),
+            ("Startup intro (28 Nov)", 2.9)]
+    W, H = 640, 310
     left, right, top, bottom = 170, 30, 28, 40
     xmax = 14.0
     pw, ph = W - left - right, H - top - bottom
@@ -79,6 +80,21 @@ def marker():
     marker_n[0] += 1
     return "QQMK%04dQQ" % marker_n[0]
 
+# The ESE rubric (10 criteria x 5 marks = 50): the "Excellent" descriptor of each criterion, shown under the
+# criterion heading so the examiner sees what the chapter is meant to demonstrate.
+RUBRIC_EXCELLENT = {
+    "1": "Problem, objectives and functional/non-functional requirements are precise and completely addressed.",
+    "2": "Comprehensive and technically relevant survey with proper references.",
+    "3": "Complete, technically sound architecture with clear data/control flow.",
+    "4": "Excellent implementation using an appropriate AR/VR framework, SDK and platform.",
+    "5": "Accurate, stable and robust tracking/spatial understanding.",
+    "6": "High-quality, optimized and appropriately integrated 3D content.",
+    "7": "Highly intuitive, responsive and immersive interaction.",
+    "8": "Effective implementation of advanced features such as animation, gesture, object/image tracking, spatial anchors, hand tracking, AI, etc.",
+    "9": "Comprehensive, technically rigorous and well-structured report.",
+    "10": "Excellent live demonstration, presentation and technical explanation.",
+}
+
 out = []
 pos = 0
 chap = None            # current chapter label (e.g. "4" or "A")
@@ -103,9 +119,15 @@ for m in token.finditer(src):
         mk = marker()
         kind = "Appendix" if chap.isalpha() else "Chapter"
         refs[hid] = "%s %s" % (kind, chap)
-        crit_html = '<span class="crit">Rubric Criterion %s of 10</span>' % crit if crit else ""
-        out.append('<h1 class="chap" id="%s"><span class="cnum">%s %s</span>%s<span style="font-size:1px;color:#fff">%s</span>%s</h1>'
-                   % (hid, kind, chap, title, mk, ("<br>" + crit_html) if crit else ""))
+        if crit:
+            # every evaluation criterion starts a new page with its name in bold, centred at the top
+            out.append('<h1 class="chap critchap" id="%s"><span class="critno">Evaluation Criterion %s of 10 &nbsp;&middot;&nbsp; 5 Marks</span>'
+                       '<span class="crittitle">%s</span><span class="cnum">%s %s</span><span style="font-size:1px;color:#fff">%s</span></h1>'
+                       '<div class="rubric-target"><b>Rubric &ndash; Excellent:</b> %s</div>'
+                       % (hid, crit, title, kind, chap, mk, RUBRIC_EXCELLENT.get(crit, "")))
+        else:
+            out.append('<h1 class="chap" id="%s"><span class="cnum">%s %s</span>%s<span style="font-size:1px;color:#fff">%s</span></h1>'
+                       % (hid, kind, chap, title, mk))
         toc.append((1, hid, "%s %s \u2013 %s" % (kind, chap, re.sub("<[^>]+>", "", title)), crit, mk))
     elif g0.startswith('<h1 class="unnum"'):
         a, title = m.group(3), m.group(4)
@@ -240,6 +262,14 @@ def page_map(pdf):
 pdf = render({})
 pages, n = page_map(pdf)
 print("pass 1:", n, "pages,", len(pages), "of", marker_n[0], "markers located")
+# chapter start pages, so the length of every chapter can be checked while editing
+starts = [(pages.get(mk, "?"), text) for (lvl, hid, text, crit, mk) in toc if lvl == 1]
+for i, (p, text) in enumerate(starts):
+    nxt = starts[i + 1][0] if i + 1 < len(starts) else str(n + 1)
+    span = int(nxt) - int(p) if p.isdigit() and nxt.isdigit() else "?"
+    print("  p%-4s %2s pp  %s" % (p, span, text[:70]))
+if os.environ.get("NB_QUICK"):   # NB_QUICK=1: one pass only, to measure page counts while editing
+    sys.exit(0)
 pdf = render(pages)
 pages2, n2 = page_map(pdf)
 moved = [k for k in pages if pages2.get(k) != pages[k]]

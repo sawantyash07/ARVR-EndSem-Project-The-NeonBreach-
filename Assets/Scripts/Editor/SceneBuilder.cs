@@ -78,6 +78,7 @@ namespace NeonBreach.EditorTools
                 Scene scene = EditorSceneManager.NewScene(NewSceneSetup.EmptyScene, NewSceneMode.Single);
                 WorldBuilder.BuildAll();
                 EnsureModeManagers();
+                IntroSceneSetup.Ensure();   // cinematic startup intro (plays before the main menu)
                 EditorSceneManager.SaveScene(scene, ScenePath);
 
                 // Neon Breach stays scene 0; other levels already in Build Settings (e.g. Farm Sniper) are kept

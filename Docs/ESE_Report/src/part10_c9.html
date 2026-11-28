@@ -1,9 +1,9 @@
-<h1 class="chap" data-chap="10" data-crit="9" id="ch10">Technical Documentation</h1>
+<h1 class="chap" data-chap="10" data-crit="9" id="ch10">Technical Documentation &amp; Project Report</h1>
 <div class="evidence"><b class="h">Evidence in this chapter</b>
 <ul><li>Measured development hardware, software versions and the technologies and tools used ([[t-hw]], [[t-tools]]).</li>
-<li>Code metrics and an explanation of the most important scripts ([[t-scripts]]); Inspector evidence of designer-tunable parameters ([[f-insp-skydive]]).</li>
-<li>Implementation methodology, build and run steps.</li>
-<li>The test plan with the results of the verification runs of 27 Nov 2026 and 22 Nov 2026 ([[t-tests]]), bugs fixed ([[t-bugs]]) and limitations.</li></ul></div>
+<li>Code metrics and an explanation of the most important scripts ([[t-scripts]]).</li>
+<li>Implementation methodology, build and run steps, and the documentation delivered with the project ([[t-docs]]).</li>
+<li>The test plan with the results of the verification runs of 22, 27 and 28 Nov 2026, including the startup intro and a standalone Windows build ([[t-tests]]), bugs fixed ([[t-bugs]]) and limitations.</li></ul></div>
 
 <h2>Hardware and Software Requirements</h2>
 <p>[[t-hw]] lists the development machine, read from Unity's <code>SystemInfo</code> in the running Editor, and the software versions read from the project's package manifest. All measurements in this report were taken on this machine.</p>
@@ -21,22 +21,17 @@
 <p>The &ldquo;to run&rdquo; column is a conservative estimate based on the measured frame times (Chapter 12), not a test on minimum-specification hardware.</p>
 
 <h2>Technologies and Tools</h2>
-<table data-cap="Technologies and tools used to build and verify the project" id="t-tools" class="compact avoid">
-<tr><th style="width:26%">Technology / tool</th><th>Use in the project</th></tr>
-<tr><td>Unity 6 Editor and C# (.NET Standard 2.1) [36]</td><td>Engine, scene editing, scripting of all gameplay, UI, content generation and editor builders</td></tr>
-<tr><td>OpenXR, XR Plug-in Management, XR Hands, AR Foundation, Meta OpenXR [11&ndash;15]</td><td>VR and MR runtime, controller and hand input, passthrough and boundary (Chapter 5)</td></tr>
-<tr><td>Input System [16]</td><td>Keyboard, mouse and gamepad devices; key rebinding back-end</td></tr>
-<tr><td>AI Navigation (NavMesh) [17]</td><td>Path-finding for enemies, mice and rats; runtime NavMesh building</td></tr>
-<tr><td>PhysX (Unity physics)</td><td>Collision layers, raycasts, sphere-casts, CharacterControllers, Rigidbodies</td></tr>
-<tr><td>IMGUI and TextMesh</td><td>Desktop menus and HUDs; world-space VR text</td></tr>
-<tr><td>Hand-written shaders (HLSL)</td><td>Post-processing, comfort vignette, cartoon toon shading, sky and effects</td></tr>
-<tr><td>Unity CLI with the Pipeline package</td><td>Command-line recompiles, Play-mode control, <code>script eval</code> state checks and Game-view captures used for the verification runs and screenshots in this report</td></tr>
-<tr><td>Git</td><td>Version control of the project</td></tr>
+<table data-cap="Technologies and tools used to build and verify the project" id="t-tools" class="compact">
+<tr><th style="width:30%">Technology / tool</th><th>Use in the project</th></tr>
+<tr><td>Unity 6 Editor, C# [36]; PhysX; AI Navigation [17]</td><td>Engine and scripting of all gameplay, UI and content; collisions and raycasts; runtime NavMeshes</td></tr>
+<tr><td>OpenXR, XR Management, XR Hands, AR Foundation, Meta OpenXR [11&ndash;15]; Input System [16]</td><td>VR and MR runtime, controllers, hands, passthrough and boundary; keyboard, mouse, gamepad and rebinding</td></tr>
+<tr><td>IMGUI, TextMesh, uGUI 2.5</td><td>Desktop menus and HUDs; world-space VR text; the startup intro (Canvas, CanvasScaler, CanvasGroup, mesh effects)</td></tr>
+<tr><td>Hand-written HLSL shaders</td><td>Post-processing, comfort vignette, toon shading, sky and effects</td></tr>
+<tr><td>Unity CLI (Pipeline package), Git</td><td>Recompiles, Play-mode control, <code>script eval</code> checks and Game-view captures for the verification runs; version control</td></tr>
 </table>
 
 <h2>Code Metrics and Project Structure</h2>
-<p>The project contains <b>123 C# scripts with 31,004 lines</b> (counted on 27 Nov 2026 with <code>find Assets -name "*.cs"</code>; the 22 Nov count in Chapter 4 was 30,808, and the polish pass added about 200 lines). Code is organised in three namespaces: <code>NeonBreach</code> (shared framework, Shooter, Archery, Parachute, VR), <code>NeonBreach.RatShooter</code> and <code>NeonBreach.FarmSniper</code>, under <code>Assets/Scripts</code> (Core, Player, Weapons, Enemies, Modes, UI, VR, World, Rendering, Editor), <code>Assets/RatShooter</code> and <code>Assets/FarmSniper</code>. Gameplay constants are exposed in the Inspector, so the game can be tuned without code changes; for example <code>SkydiveSettings</code> exposes more than 60 skydive parameters ([[f-insp-skydive]]).</p>
-<figure id="f-insp-skydive"><img src="../img/r/ed__inspector_skydive_settings.png" style="max-height:120mm; width:auto; margin:0 auto; display:block"><figcaption>Unity Inspector of the ParachuteMode component: designer-tunable skydive parameters (altitudes, terminal velocities, canopy, inputs).</figcaption></figure>
+<p>The project contains <b>129 C# scripts with 33,412 lines</b> (counted on 28 Nov 2026 with <code>find Assets -name "*.cs" | xargs wc -l</code>; the module breakdown is in [[t-modules]]). Code is organised in three namespaces: <code>NeonBreach</code> (shared framework, Shooter, Archery, Parachute, VR, the startup intro), <code>NeonBreach.RatShooter</code> and <code>NeonBreach.Farm</code>, under <code>Assets/Scripts</code> (Core, Player, Weapons, Enemies, Modes, UI, VR, World, Rendering, Intro, Editor), <code>Assets/RatShooter</code> and <code>Assets/FarmSniper</code>. Gameplay constants are exposed in the Inspector with tooltips, so the game can be tuned without code changes: <code>SkydiveSettings</code> exposes more than 60 skydive parameters and <code>CinematicIntro</code> 52 intro settings.</p>
 
 <h2>Important Scripts</h2>
 <table data-cap="The most important scripts and their responsibilities" id="t-scripts" class="compact">
@@ -52,6 +47,7 @@
 <tr><td><code>RatShooterGame</code>, <code>MouseAI</code> (566), <code>MouseSpawner</code>, <code>CartoonGun</code>, <code>RatHUD</code> (863)</td><td>Rat Shooter levels, scoring and high score; mouse brain; spawning and hide spots; cartoon rifle; HUD</td></tr>
 <tr><td><code>HUD</code> + <code>HUDMenus</code>, <code>HUDModes</code>, <code>HUDGameOver</code>, <code>HUDShop</code></td><td>All desktop menus and HUDs, fade transitions, button style</td></tr>
 <tr><td><code>VRRig</code> (398), <code>VRMenu</code>, <code>VRMenuDriver</code>, <code>HandTracking</code>, <code>MixedReality</code>, <code>ComfortVignette</code></td><td>OpenXR rig, controller mapping, world-space menu and pointer, hand gestures, MR passthrough and room registration, comfort</td></tr>
+<tr><td><code>CinematicIntro</code> (1,093), <code>IntroCurtain</code>, <code>IntroTextFX</code>, <code>IntroArt</code>, <code>IntroAudio</code> (605)</td><td>Startup intro: timeline, Canvas, hand-over to the HUD and skip; cloth mesh; letter effects; procedural textures; threaded sound synthesis</td></tr>
 <tr><td><code>AudioSynth</code>, <code>Sfx</code>, <code>BinauralFilter</code>, <code>Haptics</code></td><td>Procedural sounds and music, playback, binaural spatializer, controller haptics</td></tr>
 <tr><td><code>WorldBuilder</code>, <code>ArenaManager</code>, <code>Mats</code>, <code>ProcTex</code>, <code>PostFX</code></td><td>Procedural arenas, materials and textures; post-processing</td></tr>
 <tr><td><code>SceneBuilder</code>, <code>RatShooterSceneBuilder</code>, <code>FarmSceneBuilder</code>, <code>ProjectMenu</code></td><td>Editor tools that generate and save the scenes; the <i>Neon Breach</i> menu</td></tr>
@@ -70,14 +66,14 @@
 <h2>Build and Run Procedure</h2>
 <ol>
 <li>Open the project folder in Unity Hub with Unity <b>6000.5.5f1</b>; the Package Manager restores the packages.</li>
-<li>Open <code>Assets/Scenes/NeonBreach.unity</code> (or use <i>Neon Breach &gt; Play From Start</i>) and press Play. The Rat Shooter is reached from the main menu; <code>FarmSniper.unity</code> can be opened from <i>Neon Breach &gt; Farm Sniper</i>.</li>
+<li>Open <code>Assets/Scenes/NeonBreach.unity</code> (or use <i>Neon Breach &gt; Play From Start</i>) and press Play: the cinematic intro plays, then the main menu appears. The Rat Shooter is reached from the main menu; <code>FarmSniper.unity</code> can be opened from <i>Neon Breach &gt; Farm Sniper</i>. The intro is tuned on the <i>Cinematic Intro</i> object and can be turned off there (<i>Play Intro</i>) or with the command-line argument <code>-nbSkipIntro</code>.</li>
 <li>For VR, run <i>Neon Breach &gt; VR &gt; 2 &ndash; Configure OpenXR features</i> once (already done in the submitted project), connect an OpenXR headset and set the OpenXR runtime (e.g. Meta Quest Link) before pressing Play; the game detects the headset and switches to the VR rig automatically.</li>
 <li>To build: <i>Neon Breach &gt; Build Standalone Player</i>, or <i>File &gt; Build Profiles</i> with the three scenes in the order NeonBreach, FarmSniper, RatShooter, target Windows x86-64.</li>
 <li>Automated smoke test: run the built player with <code>-nbSmokeTest</code>; it plays through the main systems, saves screenshots and writes <code>SmokeTest/report.txt</code>. Note that it resets the saved scores, so it should not be run on a demonstration machine.</li>
 </ol>
 
 <h2>Testing and Validation</h2>
-<p>[[t-tests]] is the test plan. Each test was executed in the Unity Editor (Play mode) on the machine in [[t-hw]]; the <i>Date</i> column states which verification run produced the result. Tests marked 27 Nov were executed after the polish-pass changes and include the new features. Results are reported exactly as observed.</p>
+<p>[[t-tests]] is the test plan. Each test was executed in the Unity Editor (Play mode) on the machine in [[t-hw]], except test 32, which ran a Windows player build; the <i>Date</i> column states which verification run produced the result. Results are reported exactly as observed.</p>
 <table data-cap="Test plan and results" id="t-tests" class="compact">
 <tr><th style="width:4%">#</th><th style="width:25%">Test case</th><th>Observed result</th><th style="width:9%">Date</th><th style="width:8%">Result</th></tr>
 <tr><td>1</td><td>Compile all scripts after the polish changes</td><td>Recompile completed; 0 errors, 0 warnings in the console</td><td>27 Nov</td><td><span class="st-ok">Pass</span></td></tr>
@@ -105,6 +101,15 @@
 <tr><td>22</td><td>VR menu, combat, comfort, haptics, MR logic</td><td>Laser menu, firing, vignette 0.64 at 4.13 m/s, 45&deg; snap turn, 78 haptic impulses, MR room registration ([[t-mock-results]])</td><td>22 Nov</td><td><span class="st-mock">Pass (Mock)</span></td></tr>
 <tr><td>23</td><td>Hand tracking gestures on a real headset</td><td>Not tested: no physical headset was available</td><td>&ndash;</td><td><span class="st-hw">Open</span></td></tr>
 <tr><td>24</td><td>Passthrough camera image in MR mode</td><td>Not tested: needs a Meta Quest 3</td><td>&ndash;</td><td><span class="st-hw">Open</span></td></tr>
+<tr><td>25</td><td>Compile after adding the intro (5 runtime + 1 editor script)</td><td>0 errors, 0 warnings</td><td>28 Nov</td><td><span class="st-ok">Pass</span></td></tr>
+<tr><td>26</td><td>Press Play: the intro starts by itself</td><td>Intro playing, HUD disabled, state Menu, frame 1; timeline advancing; idle cursor hidden after 2.2 s</td><td>28 Nov</td><td><span class="st-ok">Pass</span></td></tr>
+<tr><td>27</td><td>Hand-over to the menu</td><td>Ends at t = 9.60 s; HUD re-enabled and fades in; menu music back at the player's setting (0.45); intro Canvas destroyed; cursor visible ([[f-menu-now]])</td><td>28 Nov</td><td><span class="st-ok">Pass</span></td></tr>
+<tr><td>28</td><td>Skip during the intro</td><td>Skip at t = 1.44 s; intro ended 0.45 s later with the HUD back</td><td>28 Nov</td><td><span class="st-ok">Pass</span></td></tr>
+<tr><td>29</td><td>Start Archery while the intro plays, then return to the menu</td><td>Intro ends at once, Archery runs (state Playing); back in the menu the intro does not replay</td><td>28 Nov</td><td><span class="st-ok">Pass</span></td></tr>
+<tr><td>30</td><td>Reload NeonBreach.unity (as on return from the Rat Shooter)</td><td>No intro; intro component disabled; HUD enabled; menu music 0.45</td><td>28 Nov</td><td><span class="st-ok">Pass</span></td></tr>
+<tr><td>31</td><td>Different aspect ratio</td><td>At 1440&times;1080 the title fits between the curtains ([[f-intro-43]]); 16:9 unchanged</td><td>28 Nov</td><td><span class="st-ok">Pass</span></td></tr>
+<tr><td>32</td><td>Standalone Windows player with the intro</td><td>Build succeeded with 0 errors and 0 warnings; the player ran windowed for 30 s with no exceptions in its log and closed cleanly (frames were captured in the Editor only)</td><td>28 Nov</td><td><span class="st-ok">Pass</span></td></tr>
+<tr><td>33</td><td>Console after all intro tests</td><td>0 errors, 0 warnings from the game</td><td>28 Nov</td><td><span class="st-ok">Pass</span></td></tr>
 </table>
 <p>The polish-pass tests drove the game through its own public methods (<code>ModeManager.SwitchTo</code>, <code>GameManager.Pause</code>, <code>RatShooterGame.StartGame</code> &hellip;) and a virtual Input System gamepad, which exercises the same code paths as the menu buttons and real controllers. Restart from the pause menu and beating a high score were not re-run on 27 Nov; they are unchanged by the polish pass.</p>
 
@@ -117,6 +122,18 @@
 <tr><td>&ldquo;Cannot set field of view &hellip; while VR is enabled&rdquo; warning</td><td><code>Util.SetFov</code> skips FOV writes on stereo cameras</td></tr>
 <tr><td>Fade-in used up by the Parachute island build, so no fade was visible (polish pass)</td><td>The fade clock now starts on the first drawn frame after the request</td></tr>
 <tr><td>Trajectory guide invisible from the first-person view (polish pass)</td><td>The exact path is seen end-on from the eye; the guide now starts at the arrow tip and blends onto the predicted path, with a width proportional to distance</td></tr>
+<tr><td>Intro curtains invisible in the Editor (28 Nov)</td><td>In uGUI 2.x a custom <code>Graphic</code> no longer gets a <code>CanvasRenderer</code> automatically; <code>IntroCurtain</code> now requires one explicitly</td></tr>
+<tr><td>Word gaps lost under animated letter spacing (28 Nov)</td><td>Legacy Text emits no quads for spaces; spacing is now applied by character position, so &ldquo;WELCOME TO&rdquo; keeps its word gap</td></tr>
+<tr><td>Title clipped by the curtains at 4:3 (28 Nov)</td><td>The title is now scaled to fit the gap between the opened curtains, at its widest letter spacing and hold zoom</td></tr>
+</table>
+<h2>Documentation Delivered with the Project</h2>
+<table data-cap="Documentation produced for the project" id="t-docs" class="compact">
+<tr><th style="width:28%">Document</th><th>Content</th></tr>
+<tr><td>This report (ESE project report)</td><td>One chapter per evaluation criterion; requirements, survey, architecture, implementation, tracking, assets, UI/UX, advanced features, testing and demonstration, with diagrams, equations, source listings and captures</td></tr>
+<tr><td><code>README.md</code></td><td>Architecture diagrams (Mermaid), gameplay walkthrough with screenshots, features, controls, getting started, VR set-up, design decisions, testing, known issues and tech stack</td></tr>
+<tr><td>Source-code documentation</td><td>Summary comments on the classes and key methods; Inspector tooltips on the tunable fields (for example every intro setting)</td></tr>
+<tr><td>Editor tooling</td><td>The <i>Neon Breach</i> menu: scene builders, OpenXR configuration, Cinematic Intro (add, select settings, replay)</td></tr>
+<tr><td>Report sources</td><td><code>Docs/ESE_Report/src</code>: HTML chapters and <code>build.py</code>, which numbers figures, tables and listings, pulls the listings from the real source files and renders the PDF</td></tr>
 </table>
 
 <h2>Limitations</h2>

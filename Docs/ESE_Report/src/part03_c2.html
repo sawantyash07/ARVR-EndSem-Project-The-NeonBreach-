@@ -44,19 +44,7 @@
 <figcaption>Software layers between the game and the headset. Swapping the runtime at the bottom does not require any change to the game code above it.</figcaption></figure>
 
 <h2>The Unity XR Technology Stack</h2>
-<table data-cap="Unity technologies used by NEON BREACH and their role" id="t-unity-stack" class="compact">
-<tr><th style="width:24%">Technology (version)</th><th>Role in the project</th></tr>
-<tr><td>Unity 6 (6000.5.5f1), Built-in Render Pipeline</td><td>Engine, editor, physics (PhysX), audio, rendering; custom post-processing shader instead of URP volumes</td></tr>
-<tr><td>XR Plug-in Management (4.5.4)</td><td>Selects and initialises the XR loader at start-up; manages XR subsystems</td></tr>
-<tr><td>OpenXR Plugin (1.17.1)</td><td>OpenXR loader, interaction profiles, features, Mock Runtime and conformance automation</td></tr>
-<tr><td>XR Hands (1.8.0)</td><td><code>XRHandSubsystem</code> exposing 26 joint poses per hand</td></tr>
-<tr><td>AR Foundation (6.5.0)</td><td><code>ARSession</code> and <code>ARCameraManager</code> for passthrough in MR mode</td></tr>
-<tr><td>Unity OpenXR: Meta (2.5.0)</td><td>Meta Quest features: session, camera (passthrough), boundary visibility, planes</td></tr>
-<tr><td>Input System (1.19.0)</td><td>Keyboard, mouse and gamepad devices; rebinding back-end</td></tr>
-<tr><td>AI Navigation (2.0.14)</td><td><code>NavMeshSurface</code> built at runtime for arenas and the MR room</td></tr>
-<tr><td>XR Composition Layers</td><td>Installed as a dependency of the XR packages; not used directly</td></tr>
-</table>
-<p>Unity exposes tracked devices in two ways. The <code>UnityEngine.XR.InputDevices</code> API with <code>CommonUsages</code> (for example <code>devicePosition</code>, <code>triggerButton</code>) reads any device through generic feature usages, independent of the vendor. Input System action maps are the alternative. NEON BREACH uses the first approach for XR devices, which keeps the code short and runtime-agnostic, and the Input System for desktop devices.</p>
+<p>On top of Unity 6 (6000.5.5f1, Built-in Render Pipeline) the project uses <b>XR Plug-in Management</b> 4.5.4 to select and start the XR loader, the <b>OpenXR Plugin</b> 1.17.1 (loader, interaction profiles, features, Mock Runtime and conformance automation), <b>XR Hands</b> 1.8.0 (an <code>XRHandSubsystem</code> with 26 joint poses per hand), <b>AR Foundation</b> 6.5.0 with <b>Unity OpenXR: Meta</b> 2.5.0 (session, camera passthrough, boundary), the <b>Input System</b> 1.19.0 for desktop devices and <b>AI Navigation</b> 2.0.14 for runtime NavMeshes; [[t-tools]] in Chapter 10 lists how each is used. Unity exposes tracked devices in two ways. The <code>UnityEngine.XR.InputDevices</code> API with <code>CommonUsages</code> (for example <code>devicePosition</code>, <code>triggerButton</code>) reads any device through generic feature usages, independent of the vendor; Input System action maps are the alternative. NEON BREACH uses the first approach for XR devices, which keeps the code short and runtime-agnostic, and the Input System for desktop devices.</p>
 
 <h2>Cybersickness and VR Comfort</h2>
 <p>LaViola [4] reviews three explanations of cybersickness: sensory-conflict theory, postural-instability theory and poison theory. Sensory conflict, in which the eyes report motion that the vestibular system does not feel, is the most widely cited. It predicts that artificial locomotion and rotation are the main triggers. Kennedy et al. [5] introduced the Simulator Sickness Questionnaire (SSQ), still the standard instrument for measuring it. Several mitigation techniques have experimental support:</p>
@@ -79,11 +67,8 @@
 <h2>Procedural Generation and Real-Time Rendering</h2>
 <p>Perlin's gradient noise [24] and its fractal sums remain the standard tool for natural terrain and textures. The parachute island's height field and colour map are generated this way. For the neon look, the project implements bloom with a bright-pass prefilter and a mip-chain blur, the approach popularised in Jimenez's <i>Call of Duty: Advanced Warfare</i> post-processing [25], followed by tone mapping. Filmic curves such as Narkowicz's ACES fit [26] are the usual choice in linear colour space; because NEON BREACH renders in gamma space, where such a curve would lift the shadows, it uses a highlight-only soft clip instead (Chapter 7). The Rat Shooter uses stylised cel shading in the tradition of Lake et al. [27]: a quantised diffuse ramp, a rim light and a crisp specular highlight.</p>
 
-<h2>Game Physics Background</h2>
-<p>A projectile moving through air experiences gravity and an aerodynamic drag force approximately proportional to the square of its speed, <b>F</b><sub>d</sub> = &minus;&frac12;&rho;C<sub>d</sub>A|<b>v</b>|<b>v</b>. Dividing by mass gives an acceleration &minus;k|<b>v</b>|<b>v</b>. A falling body therefore accelerates until drag balances gravity at the <i>terminal velocity</i> v<sub>t</sub> = &radic;(g/k). The terminal velocity of a skydiver depends on body position. Belly-to-earth free fall is commonly quoted at about 55 m/s (about 200 km/h), and head-down at 80 m/s or more. The project uses this model with tunable terminal velocities (Chapter 9).</p>
-
 <h2>Existing AR/VR Applications</h2>
-<p>[[t-apps]] compares well-known VR and MR titles with NEON BREACH. The comparison covers design dimensions (input, locomotion, comfort, MR); it is not a comparison of production scale.</p>
+<p>[[t-apps]] compares well-known VR and MR titles with NEON BREACH on design dimensions (input, locomotion, comfort, MR), not on production scale.</p>
 <table data-cap="Comparison of NEON BREACH with existing VR/MR applications" id="t-apps" class="compact">
 <tr><th style="width:16%">Application</th><th style="width:16%">Genre</th><th>Interaction and locomotion</th><th style="width:20%">Relevance to this project</th></tr>
 <tr><td>Half-Life: Alyx [31]</td><td>Narrative shooter (PC VR)</td><td>Tracked-hand weapons and object interaction; teleport, shift and continuous locomotion options</td><td>Benchmark for hand-held weapon handling and comfort options</td></tr>
@@ -105,6 +90,4 @@
 <tr><td>Real walking increases presence [8]</td><td>Room-scale head following; MR locks artificial locomotion</td><td>6</td></tr>
 <tr><td>Ray casting suits distant selection [28]</td><td>World-space menus with a hand ray and trigger/pinch</td><td>8</td></tr>
 <tr><td>ITD + ILD + spectral cues localise sound [21]&ndash;[23]</td><td>Parametric binaural filter with the Woodworth ITD</td><td>9</td></tr>
-<tr><td>NavMesh + steering give believable movement [18]&ndash;[20]</td><td>Runtime NavMesh, corner following, separation and flanking</td><td>9</td></tr>
-<tr><td>Noise-based procedural generation scales [24]</td><td>Fractal-noise island; all content generated in code</td><td>7</td></tr>
 </table>

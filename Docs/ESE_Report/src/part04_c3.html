@@ -1,14 +1,14 @@
 <h1 class="chap" data-chap="4" data-crit="3" id="ch4">System Architecture &amp; Design</h1>
 <div class="evidence"><b class="h">Evidence in this chapter</b>
 <ul><li>Layered system architecture ([[f-arch]]) and module decomposition with code metrics ([[t-modules]]).</li>
-<li>Class relationships ([[f-class]]), the per-frame execution pipeline ([[f-frame]]) and the input data flow ([[f-input]]).</li>
-<li>The game state machine ([[f-states]]), the scene and navigation workflow ([[f-scenes]]) and the mode-switching sequence ([[f-modeswitch]]).</li>
-<li>Scene hierarchies and component wiring captured from the Unity Editor, in edit mode and at runtime with the VR rig active ([[f-hier]], [[f-hier-runtime]]).</li>
-<li>Architectures and state machines of the Rat Shooter and Farm Sniper games; persistence design ([[t-prefs]]).</li></ul></div>
+<li>Class relationships ([[f-class]]), the per-frame execution order ([[t-order]]) and the input data flow.</li>
+<li>The game state machine ([[f-states]]), the scene and navigation workflow ([[f-scenes]]), the mode-switching sequence ([[f-modeswitch]]) and the startup-intro hand-over ([[f-intro-seq]]).</li>
+<li>Scene hierarchies captured from the Unity Editor, in edit mode and at runtime with the VR rig active ([[f-hier]], [[f-hier-runtime]]).</li>
+<li>Architectures and state machines of the Rat Shooter and Farm Sniper games; persistence design ([[s-persist]]).</li></ul></div>
 
 <h2>Architectural Style</h2>
 <p>NEON BREACH uses Unity's component-based architecture: behaviour lives in <code>MonoBehaviour</code> components attached to GameObjects, and the engine calls them every frame. On top of this the project adds a <b>layered architecture</b> with strict dependencies. Input devices are at the bottom and feed one input model; gameplay systems read only that model; core services hold state, rules and persistence; world builders generate content; and presentation systems (HUD, VR UI, post-processing, audio, haptics) render the result. Each layer depends only on the layers below it, which is why a new input method (hand tracking) or a new mode (archery, parachute) could be added without changing the existing gameplay code.</p>
-<figure class="diagram" id="f-arch"><pre class="mermaid">flowchart TB
+<figure class="diagram big" id="f-arch"><pre class="mermaid">flowchart LR
   subgraph L1["1 · Input devices"]
     direction TB
     KBM["Keyboard + mouse<br/>DesktopInput"]
@@ -52,27 +52,28 @@
 <figcaption>Layered architecture of NEON BREACH. Every input device writes into one <code>PlayerInputState</code>; gameplay systems never query a device directly.</figcaption></figure>
 
 <h2>Module Decomposition</h2>
-<p>The C# code is organised into three namespaces: <code>NeonBreach</code> for the main game, <code>NeonBreach.RatShooter</code> and <code>NeonBreach.Farm</code>. The main game is split into ten folders by responsibility ([[t-modules]]).</p>
-<table data-cap="Modules, responsibilities and code metrics (counted from the project on 22 Nov 2026)" id="t-modules" class="compact">
+<p>The C# code is organised into three namespaces: <code>NeonBreach</code> for the main game, <code>NeonBreach.RatShooter</code> and <code>NeonBreach.Farm</code>. The main game is split into eleven folders by responsibility ([[t-modules]]).</p>
+<table data-cap="Modules, responsibilities and code metrics (counted from the project on 28 Nov 2026)" id="t-modules" class="compact">
 <tr><th style="width:17%">Module (folder)</th><th class="num" style="width:7%">Scripts</th><th class="num" style="width:7%">Lines</th><th>Responsibility</th><th style="width:27%">Key types</th></tr>
-<tr><td>Scripts/Core</td><td class="num">17</td><td class="num">3,265</td><td>Game state, settings, persistence, scoring, audio synthesis and playback, haptics, procedural textures/materials, profiling, automated test</td><td><code>GameManager</code>, <code>GameSettings</code>, <code>Stats</code>, <code>Sfx</code>, <code>BinauralFilter</code>, <code>Haptics</code>, <code>Perf</code></td></tr>
+<tr><td>Scripts/Core</td><td class="num">17</td><td class="num">3,269</td><td>Game state, settings, persistence, scoring, audio synthesis and playback, haptics, procedural textures/materials, profiling, automated test</td><td><code>GameManager</code>, <code>GameSettings</code>, <code>Stats</code>, <code>Sfx</code>, <code>BinauralFilter</code>, <code>Haptics</code>, <code>Perf</code></td></tr>
 <tr><td>Scripts/Player</td><td class="num">6</td><td class="num">1,236</td><td>Locomotion, the input model and its desktop/gamepad readers, tutorial</td><td><code>PlayerController</code>, <code>PlayerInputState</code>, <code>DesktopInput</code></td></tr>
 <tr><td>Scripts/Weapons</td><td class="num">4</td><td class="num">1,088</td><td>Firing, reloading, ADS, switching, grenades, impact effects</td><td><code>WeaponSystem</code>, <code>WeaponStats</code>, <code>Grenade</code>, <code>FX</code></td></tr>
 <tr><td>Scripts/Enemies</td><td class="num">4</td><td class="num">1,394</td><td>Wave director, six enemy AIs, projectiles, pickups</td><td><code>WaveManager</code>, <code>Enemy</code>, <code>Pickup</code></td></tr>
-<tr><td>Scripts/Modes</td><td class="num">11</td><td class="num">4,433</td><td>Mode switching, archery, parachute, wind, mode HUDs</td><td><code>ModeManager</code>, <code>MiniGame</code>, <code>ArcheryMode</code>, <code>ParachuteController</code></td></tr>
-<tr><td>Scripts/UI</td><td class="num">4</td><td class="num">1,523</td><td>IMGUI HUD, menus, shop, game-over analytics</td><td><code>HUD</code> (partial class)</td></tr>
+<tr><td>Scripts/Modes</td><td class="num">11</td><td class="num">4,586</td><td>Mode switching, archery, parachute, wind, mode HUDs</td><td><code>ModeManager</code>, <code>MiniGame</code>, <code>ArcheryMode</code>, <code>ParachuteController</code></td></tr>
+<tr><td>Scripts/UI</td><td class="num">4</td><td class="num">1,558</td><td>IMGUI HUD, menus, shop, game-over analytics</td><td><code>HUD</code> (partial class)</td></tr>
 <tr><td>Scripts/VR</td><td class="num">6</td><td class="num">1,209</td><td>Headset rig, hand tracking, comfort, VR menus, mixed reality</td><td><code>VRRig</code>, <code>HandTracking</code>, <code>MixedReality</code></td></tr>
 <tr><td>Scripts/World</td><td class="num">4</td><td class="num">627</td><td>World generation, arena switching, runtime NavMesh, bootstrap</td><td><code>WorldBuilder</code>, <code>ArenaManager</code></td></tr>
 <tr><td>Scripts/Rendering</td><td class="num">1</td><td class="num">108</td><td>Post-processing for the Built-in pipeline</td><td><code>PostFX</code></td></tr>
-<tr><td>Scripts/Editor</td><td class="num">4</td><td class="num">414</td><td>Scene builder, first-open bootstrap, OpenXR set-up menu, instancing guard</td><td><code>SceneBuilder</code>, <code>ProjectMenu</code></td></tr>
+<tr><td>Scripts/Intro</td><td class="num">5</td><td class="num">2,335</td><td>Cinematic startup intro: Canvas, curtain cloth mesh, title effects, procedural art and audio</td><td><code>CinematicIntro</code>, <code>IntroCurtain</code>, <code>IntroAudio</code></td></tr>
+<tr><td>Scripts/Editor</td><td class="num">5</td><td class="num">480</td><td>Scene builder, first-open bootstrap, OpenXR set-up menu, instancing guard, intro set-up menu</td><td><code>SceneBuilder</code>, <code>ProjectMenu</code>, <code>IntroSceneSetup</code></td></tr>
 <tr><td>RatShooter</td><td class="num">34</td><td class="num">8,330</td><td>Cartoon game: world, mice AI and rig, gun, HUD, audio, toon rendering, scene builder</td><td><code>RatShooterGame</code>, <code>MouseAI</code>, <code>MouseRig</code></td></tr>
 <tr><td>FarmSniper</td><td class="num">28</td><td class="num">7,192</td><td>Sniper game: farm world, rats AI, rifle, HUD, VR rig, scene builder</td><td><code>FarmGameManager</code>, <code>SniperRifle</code>, <code>RatAI</code></td></tr>
-<tr><td><b>Total</b></td><td class="num"><b>123</b></td><td class="num"><b>30,808</b></td><td colspan="2">Plus 5 shaders (NB_PostFX, NB_Vignette, RatToon, RatSky, RatFX) and 3 scenes</td></tr>
+<tr><td><b>Total</b></td><td class="num"><b>129</b></td><td class="num"><b>33,412</b></td><td colspan="2">Plus 5 shaders (NB_PostFX, NB_Vignette, RatToon, RatSky, RatFX) and 3 scenes</td></tr>
 </table>
 
 <h2>Component and Class Relationships</h2>
 <p>[[f-class]] shows the main classes of the shared framework and how they relate. Three interfaces and one abstract base class keep the coupling low. <code>IDamageable</code> lets weapons damage enemies, players and training targets without knowing their types. <code>IPlayerDriver</code> lets a mode take over the player's movement (the parachute does this). The abstract <code>MiniGame</code> class gives every mini-game the same life cycle: <code>Begin</code>, <code>Teardown</code> and a result screen.</p>
-<figure class="diagram" id="f-class"><pre class="mermaid">classDiagram
+<figure class="diagram big" id="f-class"><pre class="mermaid">classDiagram
   direction TB
   class GameManager { +GameState State; +List~PlayerController~ Players; +ModeManager Modes; +StartGame(); +Pause(); +OpenShop(); +BeginModeRun(); +EndModeRun() }
   class PlayerController { +PlayerInputState Inp; +WeaponSystem weapons; +VRRig vr; +IPlayerDriver Driver; +LookAt(); -FollowHead() }
@@ -111,7 +112,7 @@
 <figcaption>Simplified class diagram of the shared framework (fields and methods abridged).</figcaption></figure>
 
 <h2>Frame Execution Pipeline</h2>
-<p>In VR, the order in which components run within one frame decides correctness: the hand pose must be read before input is translated, and input must be complete before weapons fire. The project fixes the order with Unity's <code>[DefaultExecutionOrder]</code> attribute ([[t-order]]). [[f-frame]] shows the resulting pipeline.</p>
+<p>In VR, the order in which components run within one frame decides correctness: the hand pose must be read before input is translated, and input must be complete before weapons fire. The project fixes the order with Unity's <code>[DefaultExecutionOrder]</code> attribute ([[t-order]]). Reading input once per frame into a struct means every system sees the same input for the whole frame.</p>
 <table data-cap="Script execution order (lower runs earlier in each frame)" id="t-order" class="compact">
 <tr><th class="num" style="width:10%">Order</th><th style="width:24%">Component</th><th>Why it runs at this point</th></tr>
 <tr><td class="num">&minus;100</td><td><code>GameManager</code></td><td>Pause requests (Esc, gamepad Start, VR menu button), the F1/F3/F4/F12 hotkeys and state transitions, before anything reads the state</td></tr>
@@ -119,52 +120,16 @@
 <tr><td class="num">&minus;70</td><td><code>HandTracking</code></td><td>Reads the 26 joints per hand and detects gestures first</td></tr>
 <tr><td class="num">&minus;60</td><td><code>VRRig</code></td><td>Menu-button handling; its <code>Read()</code> is called by the player at &minus;50</td></tr>
 <tr><td class="num">&minus;50</td><td><code>PlayerController</code></td><td>Clears and refills <code>PlayerInputState</code> from all readers, then moves the player (or delegates to an <code>IPlayerDriver</code>)</td></tr>
+<tr><td class="num">&minus;50</td><td><code>CinematicIntro</code></td><td>Only during the startup intro: runs after <code>GameManager.Awake</code>, hides the HUD before it draws once and mutes the menu music started in <code>GameManager.Start</code></td></tr>
 <tr><td class="num">&minus;20</td><td><code>WeaponSystem</code></td><td>Fires and reloads from the finished input</td></tr>
 <tr><td class="num">&minus;10</td><td><code>ArcheryMode</code>, <code>ParachuteMode</code></td><td>Mode logic after the input of this frame is known</td></tr>
 <tr><td class="num">0</td><td><code>Enemy</code>, <code>Arrow</code>, <code>HUD</code>, others</td><td>World simulation; IMGUI is drawn in <code>OnGUI</code></td></tr>
 <tr><td class="num">LateUpdate</td><td><code>VRRig</code>, <code>ComfortVignette</code>, <code>BinauralFilter</code></td><td>Apply the latest tracked poses to the camera and hands, then update the vignette and the audio cue parameters</td></tr>
 <tr><td class="num">Render</td><td><code>PostFX.OnRenderImage</code></td><td>Bloom, tone mapping and grading on the final image (desktop)</td></tr>
 </table>
-<figure class="diagram" id="f-frame"><pre class="mermaid">sequenceDiagram
-  autonumber
-  participant XR as OpenXR runtime
-  participant HT as HandTracking (-70)
-  participant PC as PlayerController (-50)
-  participant RIG as VRRig
-  participant WS as WeaponSystem (-20)
-  participant W as Enemies / Modes (0)
-  participant LU as LateUpdate + render
-  XR->>HT: joint poses (XRHandSubsystem)
-  HT->>HT: pinch / palm gestures
-  PC->>PC: Inp.Clear()
-  PC->>RIG: DesktopInput / GamepadInput / vr.Read(Inp)
-  RIG-->>PC: buttons, sticks, gestures
-  PC->>PC: look, move (or Driver.DrivePlayer)
-  WS->>WS: fire / reload from Inp
-  W->>W: AI, physics, scoring
-  LU->>XR: Track(CenterEye, hands) then submit frame</pre>
-<figcaption>Order of operations within one frame. Reading input once and storing it in a struct ensures every system sees the same input for the whole frame.</figcaption></figure>
 
 <h2>Input Data Flow</h2>
-<figure class="diagram" id="f-input"><pre class="mermaid">flowchart LR
-  subgraph R["Readers"]
-    direction TB
-    D["DesktopInput.Read<br/>keys via KeyBindings"]
-    G["GamepadInput.Read<br/>P1, or P2 in co-op"]
-    V["VRRig.Read<br/>CommonUsages buttons and sticks"]
-    H["HandTracking<br/>pinch / open palm"]
-  end
-  S[["PlayerInputState<br/>move · look · snapTurn<br/>fire · aim · zoom · reload<br/>jump · dash · sprint · crouch<br/>grenade · melee · flashlight<br/>medkit · weaponSelect"]]
-  D --> S
-  G --> S
-  V --> S
-  H --> V
-  S --> C1["PlayerController<br/>locomotion"]
-  S --> C2["WeaponSystem"]
-  S --> C3["ArcheryMode<br/>draw, release, zoom"]
-  S --> C4["ParachuteController<br/>jump, dive, ripcord, flare"]
-  S --> C5["Tutorial<br/>step detection"]</pre>
-<figcaption>Input data flow. All four readers write into the same structure; each consumer reads it without knowing which device produced it.</figcaption></figure>
+<p>Four readers write into one <code>PlayerInputState</code> per player each frame: <code>DesktopInput</code> (keys through <code>KeyBindings</code>), <code>GamepadInput</code> (player 1, or player 2 in co-op), <code>VRRig.Read</code> (XR controllers through <code>CommonUsages</code>) and <code>HandTracking</code> (pinch and open-palm gestures, passed on through <code>VRRig</code>). The state carries move, look and snap-turn axes and the fire, aim, zoom, reload, jump, dash, sprint, crouch, grenade, melee, flashlight, medkit and weapon-select actions. Its consumers &ndash; <code>PlayerController</code>, <code>WeaponSystem</code>, <code>ArcheryMode</code>, <code>ParachuteController</code> and the <code>Tutorial</code> &ndash; read it without knowing which device produced it ([[f-arch]]).</p>
 
 <h2>Game State Machine</h2>
 <p><code>GameManager</code> holds a finite-state machine with five states (<code>enum GameState { Menu, Playing, Paused, Shop, GameOver }</code>). The mini-game modes reuse it: <code>BeginModeRun()</code> enters <i>Playing</i> and <code>EndModeRun()</code> enters <i>GameOver</i>, which shows the mode's results screen.</p>
@@ -188,6 +153,7 @@
 <figure class="diagram" id="f-scenes"><pre class="mermaid">flowchart TB
   subgraph S0["NeonBreach.unity (build index 0)"]
     direction LR
+    INTRO(["Cinematic intro<br/>(first launch only)"])
     MENU(["Main menu"])
     SH["Shooter<br/>waves, shop, co-op"]
     AR["Archery"]
@@ -195,6 +161,7 @@
     TUT["Tutorial"]
     OPT["Settings, leaderboard,<br/>how to play"]
     RES["Results / game over"]
+    INTRO --> MENU
     MENU --> SH
     MENU --> AR
     MENU --> PA
@@ -224,8 +191,7 @@
 <figcaption>Scenes and navigation. Shooter, Archery and Parachute share one scene and switch at runtime; the other two games are separate scenes.</figcaption></figure>
 
 <h2>Mode-Switching Design</h2>
-<p>Switching modes inside one scene, rather than loading a new scene, keeps the player object, the VR rig, the settings and the audio system alive, which avoids reinitialising XR. The cost is that every mode must remove everything it created. <code>ModeManager.SwitchTo</code> ([[l-switch]]) enforces this order: tear down the active mode, hide the shooter world, begin a mode run, then let the new mode build its world.</p>
-<code-file src="Assets/Scripts/Modes/ModeManager.cs" lines="166-195" cap="ModeManager.SwitchTo &ndash; tearing down one mode and building the next" id="l-switch"/>
+<p>Switching modes inside one scene, rather than loading a new scene, keeps the player object, the VR rig, the settings and the audio system alive, which avoids reinitialising XR. The cost is that every mode must remove everything it created. <code>ModeManager.SwitchTo</code> ([[f-modeswitch]]) enforces this order: tear down the active mode, hide the shooter world, begin a mode run, then let the new mode build its world.</p>
 <figure class="diagram" id="f-modeswitch"><pre class="mermaid">sequenceDiagram
   autonumber
   actor P as Player
@@ -250,19 +216,16 @@
 <figcaption>Sequence of a runtime mode switch.</figcaption></figure>
 
 <h2>Scene Hierarchy</h2>
-<p>The saved <code>NeonBreach.unity</code> scene is deliberately small: the generated <b>Arena</b> (84 child objects), the <b>Player</b> (CharacterController, PlayerController and VRRig) and the <b>GameManager</b> object, which hosts the manager components ([[f-hier]], [[f-insp-gm]]). Everything else is created at runtime. [[f-hier-runtime]] was captured in Play mode with the VR rig active: the rig has created the tracked <code>RightHand</code> (controller shell, laser and the weapon holder with all three weapons), the <code>LeftHand</code> with its <code>WristDisplay</code>, the <code>ComfortVignette</code> under the camera, and the VR menu objects, while <code>ModeManager</code> has added the archery and parachute components and the wave system has spawned enemies.</p>
+<p>The saved <code>NeonBreach.unity</code> scene is deliberately small: the generated <b>Arena</b> (84 child objects), the <b>Player</b> (CharacterController, PlayerController and VRRig) the <b>GameManager</b> object, which hosts the manager components, and, since 28 Nov, the <b>Cinematic Intro</b> object ([[f-hier]]). Everything else is created at runtime. [[f-hier-runtime]] was captured in Play mode with the VR rig active: the rig has created the tracked <code>RightHand</code> (controller shell, laser and the weapon holder with all three weapons), the <code>LeftHand</code> with its <code>WristDisplay</code>, the <code>ComfortVignette</code> under the camera, and the VR menu objects, while <code>ModeManager</code> has added the archery and parachute components and the wave system has spawned enemies.</p>
+
 <div class="sidebyside">
 <figure id="f-hier"><img src="../img/r/ed__hierarchy_neonbreach.png"><figcaption>NeonBreach scene hierarchy in edit mode (Player expanded).</figcaption></figure>
-<figure id="f-insp-gm"><img src="../img/r/ed__inspector_gamemanager.png"><figcaption>GameManager components in edit mode: GameManager, WaveManager (16 spawn points), HUD, Tutorial and VRMenuDriver.</figcaption></figure>
+<figure id="f-hier-runtime" class="tall2"><img src="../img/r/ed__hierarchy_runtime_vr.png"><figcaption>Runtime hierarchy with the VR rig active (OpenXR Mock Runtime): tracked hands, wrist display, laser, comfort vignette, VR menu, NavMesh object, enemies.</figcaption></figure>
 </div>
-<div class="sidebyside">
-<figure id="f-hier-runtime" class="tall2"><img src="../img/r/ed__hierarchy_runtime_vr.png"><figcaption>Runtime hierarchy with the VR rig active (OpenXR Mock Runtime): tracked hands, wrist display, laser, comfort vignette, VR menu panel and pointer, NavMesh object, enemies.</figcaption></figure>
-<figure id="f-insp-gm-rt"><img src="../img/r/ed__inspector_gamemanager_runtime.png"><figcaption>GameManager at runtime: ModeManager, WindSystem, ArcheryMode and ParachuteMode have been added.</figcaption></figure>
-</div>
-<figure id="f-insp-player" class="w60"><img src="../img/r/ed__inspector_player.png"><figcaption>Player Inspector: CharacterController (radius 0.35 m, height 1.8 m), PlayerController references and tuning (walk 5.5 m/s, sprint 9.5 m/s, gravity &minus;26 m/s&sup2;, dash 21 m/s), and the VRRig component.</figcaption></figure>
 
 <h2>Rat Shooter Architecture</h2>
-<p>The Rat Shooter has its own scene with three roots: <code>Environment</code> (the generated farmyard), <code>Player</code> and <code>RatShooterGame</code> ([[f-hier-rat]]). [[f-rat-arch]] shows its components and [[f-rat-states]] its game states. The game reuses the shared <code>DesktopInput</code>, <code>KeyBindings</code>, <code>GameSettings</code> and <code>NB_PostFX</code> shader, but has its own HUD, audio synthesiser and toon shaders.</p>
+<p>The Rat Shooter has its own scene with three roots: <code>Environment</code> (the generated farmyard), <code>Player</code> and <code>RatShooterGame</code>. [[f-rat-arch]] shows its components and [[f-rat-states]] its game states. The game reuses the shared <code>DesktopInput</code>, <code>KeyBindings</code>, <code>GameSettings</code> and <code>NB_PostFX</code> shader, but has its own HUD, audio synthesiser and toon shaders.</p>
+<div class="sidebyside">
 <figure class="diagram" id="f-rat-arch"><pre class="mermaid">flowchart TB
   G["RatShooterGame<br/>state, levels, score, combo, timer"]
   H["RatHUD (IMGUI)"]
@@ -283,7 +246,6 @@
   VAR --> AI
   G --> AU</pre>
 <figcaption>Component structure of the Rat Shooter.</figcaption></figure>
-<div class="sidebyside">
 <figure class="diagram" id="f-rat-states"><pre class="mermaid">stateDiagram-v2
   [*] --> Title
   Title --> Countdown: Play
@@ -297,42 +259,37 @@
   GameOver --> Countdown: Retry / New game
   Victory --> Countdown: Play again</pre>
 <figcaption>Rat Shooter states (<code>enum RatState</code>).</figcaption></figure>
-<figure id="f-hier-rat" class="tall2"><img src="../img/r/ed__hierarchy_ratshooter.png"><figcaption>RatShooter scene hierarchy (Environment expanded).</figcaption></figure>
 </div>
 
 <h2>Farm Sniper Architecture</h2>
-<figure class="diagram" id="f-farm-arch"><pre class="mermaid">flowchart TB
-  FGM["FarmGameManager<br/>title, briefing, mission, timer,<br/>score, crop health, difficulty"]
-  FP["FarmPlayer<br/>move, 360° look, third person"]
-  RF["SniperRifle<br/>bolt action, 4x/8x/12x scope,<br/>820 m/s simulated bullets"]
-  RS["RatSpawner<br/>burrows, live-rat cap, NavMesh"]
-  RA["RatAI<br/>roam, feed, flee, hide, escape"]
-  CF["CropField"]
-  HUDF["FarmHUD"]
-  VR2["FarmVRRig, FarmVRPanel"]
-  FGM --> FP --> RF
-  RF -->|hit / miss| FGM
-  RF -->|noise| RS
-  FGM --> RS --> RA
-  RA -->|eats| CF --> FGM
-  FGM --> HUDF
-  FP --> VR2</pre>
-<figcaption>Component structure of the Farm Sniper. Its states are <code>Title &rarr; Briefing &rarr; Playing &#8644; Paused &rarr; Victory | GameOver</code> (<code>enum FarmState</code>).</figcaption></figure>
-<figure id="f-hier-farm" class="w50"><img src="../img/r/ed__hierarchy_farm.png"><figcaption>FarmSniper scene hierarchy: Sun, Environment, Rat Burrows, the Farmer (player) with its tracking space, the game manager and the rat template.</figcaption></figure>
+<p>The bonus Farm Sniper scene follows the same pattern: <code>FarmGameManager</code> owns the title, briefing, mission timer, score, crop health and difficulty (states <code>Title &rarr; Briefing &rarr; Playing &#8644; Paused &rarr; Victory | GameOver</code>); <code>FarmPlayer</code> moves the farmer and drives the <code>SniperRifle</code> (bolt action, 4&times;/8&times;/12&times; scope, 820 m/s simulated bullets), which reports hits and misses to the manager and its noise to the <code>RatSpawner</code>; <code>RatAI</code> agents roam, feed on the <code>CropField</code>, flee, hide and escape into burrows; <code>FarmHUD</code>, <code>FarmVRRig</code> and <code>FarmVRPanel</code> present it on the desktop and in VR.</p>
 
-<h2>Persistence Design</h2>
-<p>All persistent data is stored with Unity's <code>PlayerPrefs</code> key&ndash;value store under the company "COEP Tech" and product "Neon Breach". Complex records (the leaderboard, lifetime statistics and the death map) are serialised to JSON strings with versioned keys, so that a future format can coexist with old data.</p>
-<table data-cap="Persistent data keys (PlayerPrefs)" id="t-prefs" class="compact">
-<tr><th style="width:30%">Key(s)</th><th>Content</th></tr>
-<tr><td><code>nb_sens</code>, <code>nb_fov</code>, <code>nb_invy</code>, <code>nb_shake</code></td><td>Gameplay settings: mouse sensitivity, field of view, invert Y, screen-shake intensity</td></tr>
-<tr><td><code>nb_quality</code>, <code>nb_postfx</code>, <code>nb_bloom</code>, <code>nb_vsync</code>, <code>nb_fps</code></td><td>Graphics settings</td></tr>
-<tr><td><code>nb_vol</code>, <code>nb_music</code>, <code>nb_hrtf</code></td><td>Audio settings, including the binaural (HRTF) toggle</td></tr>
-<tr><td><code>nb_bind_0</code> &hellip; <code>nb_bind_n</code></td><td>Rebound key for each game action</td></tr>
-<tr><td><code>nb_vr_vig</code>, <code>nb_vr_vigs</code>, <code>nb_vr_turn</code>, <code>nb_vr_snap</code>, <code>nb_vr_smooth</code>, <code>nb_vr_seated</code>, <code>nb_vr_hands</code>, <code>nb_vr_haptics</code>, <code>nb_vr_mr</code></td><td>VR comfort and feature settings (vignette and its strength, turn mode, snap angle, smooth-turn speed, seated mode, hand tracking, haptics, mixed reality)</td></tr>
-<tr><td><code>nb_lang</code>, <code>nb_name</code>, <code>nb_diff</code>, <code>nb_arena</code>, <code>nb_coop</code>, <code>nb_tut_done</code></td><td>Language, callsign, mission set-up and tutorial completion</td></tr>
-<tr><td><code>nb_high</code>, <code>nb_high_archery</code>, <code>nb_high_parachute</code>, <code>nb_high_rats</code>, <code>farm_best_0..2</code></td><td>Per-mode high scores (Farm Sniper per difficulty)</td></tr>
-<tr><td><code>nb_board_v2</code>, <code>nb_lifetime_v1</code>, <code>nb_deaths_&lt;arena&gt;</code></td><td>Top-10 leaderboard, lifetime statistics and the death heat map (JSON)</td></tr>
-</table>
+<h2 id="s-intro-arch">Startup Intro Architecture</h2>
+<p>The cinematic intro (28 Nov 2026) is an independent component on its own scene object, <i>Cinematic Intro</i>, so the existing menu, modes and HUD code were not changed. Three design constraints shaped it. (1) The menu is drawn with IMGUI, which Unity always draws <i>over</i> uGUI canvases, so the intro cannot simply cover the menu: while it plays it disables only the <code>HUD</code> component. (2) The hand-over must be invisible: the intro ends on the HUD's own fade colour, and the HUD's existing <code>FadeIn</code> continues from it. (3) It must play once per launch: a static flag set by a <code>RuntimeInitializeOnLoadMethod</code> after the first scene load means that reloading <code>NeonBreach.unity</code> from the Rat Shooter, or returning from a mode, goes straight to the menu. The intro also ends at once if a mode is started meanwhile (F5&ndash;F7), and it is skipped in VR, in batch mode and for the automated smoke test.</p>
+<figure class="diagram" id="f-intro-seq"><pre class="mermaid">sequenceDiagram
+  autonumber
+  participant GM as GameManager (-100)
+  participant CI as CinematicIntro (-50)
+  participant T as Worker thread
+  participant H as HUD (IMGUI menu)
+  participant S as Sfx music
+  GM->>GM: Awake: settings, HUD reference
+  CI->>H: Awake: enabled = false
+  CI->>CI: build Canvas, curtains, title
+  CI->>T: Task.Run(IntroAudio.Render)
+  GM->>S: Start: StartMusic()
+  CI->>S: Start: volume 0
+  T-->>CI: music, ambience, curtain, reveal samples
+  loop every frame until the end or Skip
+    CI->>CI: timeline: curtains, title, audio volumes
+  end
+  CI->>H: enabled = true, FadeIn(0.8 s)
+  CI->>S: fade the menu music back in
+  CI->>CI: destroy Canvas, textures and clips</pre>
+<figcaption>Hand-over between the startup intro and the existing main menu. The numbers in brackets are the script execution orders.</figcaption></figure>
+
+<h2 id="s-persist">Persistence Design</h2>
+<p>All persistent data is stored with Unity's <code>PlayerPrefs</code> key&ndash;value store under the company "COEP Tech" and product "Neon Breach", with an <code>nb_</code> prefix: settings (<code>nb_sens</code>, <code>nb_fov</code>, <code>nb_vol</code>, <code>nb_music</code>, <code>nb_lang</code>, <code>nb_bind_0..n</code>), VR comfort (<code>nb_vr_*</code>), mission set-up (<code>nb_diff</code>, <code>nb_arena</code>, <code>nb_coop</code>), per-mode high scores (<code>nb_high</code>, <code>nb_high_archery</code>, <code>nb_high_parachute</code>, <code>nb_high_rats</code>) and statistics (<code>nb_board_v2</code>, <code>nb_lifetime_v1</code>, <code>nb_deaths_&lt;arena&gt;</code>). Complex records (the leaderboard, lifetime statistics and the death map) are serialised to JSON strings with versioned keys, so that a future format can coexist with old data.</p>
 
 <h2>Design Patterns Used</h2>
 <table data-cap="Design patterns in the code base" class="compact">

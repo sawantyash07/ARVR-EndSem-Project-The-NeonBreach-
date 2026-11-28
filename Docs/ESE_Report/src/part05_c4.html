@@ -1,21 +1,21 @@
 <h1 class="chap" data-chap="5" data-crit="4" id="ch5">AR/VR Technology Implementation</h1>
 <div class="evidence"><b class="h">Evidence in this chapter</b>
-<ul><li>The exact XR packages and versions ([[l-manifest]]) and the XR Plug-in Management and OpenXR configuration, captured from the Editor ([[f-xr-mgmt]], [[f-openxr-features]], [[f-xr-validation]]).</li>
-<li>A configuration gap found during the audit and fixed with the project's own OpenXR set-up tool ([[l-config]]).</li>
-<li>Source listings of the VR rig, controller mapping, hand-gesture recognition, mixed-reality mode, haptics and VR menu pointer.</li>
+<ul><li>The XR Plug-in Management and OpenXR configuration, captured from the Editor ([[f-xr-mgmt]], [[f-openxr-features]], [[f-xr-validation]]), and the enabled OpenXR features ([[t-features]]).</li>
+<li>A configuration gap found during the audit and fixed with the project's own OpenXR set-up tool.</li>
+<li>The VR rig, controller mapping ([[l-read]], [[t-xr-map]]), hand-gesture recognition ([[l-hands]]), mixed-reality mode, haptics and the world-space VR menu.</li>
 <li><b>End-to-end verification of the VR pipeline</b> with Unity's OpenXR Mock Runtime and the conformance-automation extension: real VR frames, haptic events and measured values ([[s-mockvr]], [[t-mock-results]], [[f-vr-grid]]).</li></ul></div>
 
 <h2>XR Technology Stack</h2>
-<p>The project is a standard Unity package-manager project. [[l-manifest]] shows the dependencies that make up the XR stack; [[t-unity-stack]] in Chapter 3 explains the role of each. <code>com.unity.pipeline</code> is a development dependency: it lets the Unity command-line interface drive the running Editor, which was used to capture the evidence in this report.</p>
-<code-file src="Packages/manifest.json" lines="1-22" cap="Package manifest: the XR, input and navigation packages used by the project" id="l-manifest"/>
+<p>The project is a standard Unity package-manager project. Its <code>Packages/manifest.json</code> declares the XR stack described in Chapter 3 &ndash; XR Plug-in Management 4.5.4, OpenXR 1.17.1, XR Hands 1.8.0, AR Foundation 6.5.0 and Unity OpenXR: Meta 2.5.0 &ndash; together with the Input System 1.19.0 and AI Navigation 2.0.14. <code>com.unity.pipeline</code> is a development dependency: it lets the Unity command-line interface drive the running Editor, which was used to capture the evidence in this report. The startup intro additionally uses uGUI 2.5 (a Screen Space &ndash; Overlay Canvas), which the XR packages already bring in.</p>
 
 <h2>XR Plug-in Management and OpenXR Configuration</h2>
 <p>Unity starts XR through <b>XR Plug-in Management</b>. For each build target it stores a list of <i>loaders</i> and a flag, <i>Initialize XR on Startup</i>. At start-up the first loader whose runtime is available initialises the XR subsystems: display, input, hands, camera and session.</p>
 <div class="gap"><b>Gap found during the ESE audit.</b> <code>Assets/XR/XRGeneralSettingsPerBuildTarget.asset</code> contained no build targets, and every feature in <code>OpenXR Package Settings.asset</code> had <code>m_enabled: 0</code>. The VR code was complete, but VR could not start until a developer ran a manual set-up step that is easy to forget before a demonstration.</div>
-<div class="good"><b>Improvement implemented.</b> Default XR settings were created for the Standalone and Android targets through XR Management's own API. The project's menu tool <i>Neon Breach &rarr; VR &rarr; 2 &ndash; Configure OpenXR features</i> ([[l-config]]) was then run: it assigned the OpenXR loader and enabled the five controller profiles plus hand tracking (9 changes). Unity's OpenXR project validation reports <b>0 issues</b> for Standalone, and XR Plug-in Management validation reports <b>0 issues in 12 checks</b> after the <i>Run In Background</i> fix ([[f-xr-validation]]).</div>
-<code-file src="Assets/Scripts/Editor/ProjectMenu.cs" lines="29-66" cap="Editor tool that assigns the OpenXR loader and enables the required OpenXR features" id="l-config"/>
-<figure id="f-xr-mgmt" class="w90"><img src="../img/r/ed__xr_plugin_management.png"><figcaption>XR Plug-in Management (Windows tab) after the fix: <i>OpenXR</i> is the active plug-in provider and <i>Initialize XR on Startup</i> is enabled.</figcaption></figure>
-<figure id="f-openxr-features" class="w90"><img src="../img/r/ed__openxr_features.png"><figcaption>OpenXR settings: single-pass instanced rendering, five enabled interaction profiles, and the Hand Tracking Subsystem and Meta Hand Tracking Aim features.</figcaption></figure>
+<div class="good"><b>Improvement implemented.</b> Default XR settings were created for the Standalone and Android targets through XR Management's own API. The project's menu tool <i>Neon Breach &rarr; VR &rarr; 2 &ndash; Configure OpenXR features</i> (in <code>ProjectMenu.cs</code>) was then run: it assigned the OpenXR loader and enabled the five controller profiles plus hand tracking (9 changes). Unity's OpenXR project validation reports <b>0 issues</b> for Standalone, and XR Plug-in Management validation reports <b>0 issues in 12 checks</b> after the <i>Run In Background</i> fix ([[f-xr-validation]]).</div>
+<div class="sidebyside">
+<figure id="f-xr-mgmt"><img src="../img/r/ed__xr_plugin_management.png"><figcaption>XR Plug-in Management (Windows tab) after the fix: <i>OpenXR</i> is the active plug-in provider and <i>Initialize XR on Startup</i> is enabled.</figcaption></figure>
+<figure id="f-openxr-features"><img src="../img/r/ed__openxr_features.png"><figcaption>OpenXR settings: single-pass instanced rendering, five interaction profiles, Hand Tracking Subsystem and Meta Hand Tracking Aim.</figcaption></figure>
+</div>
 <table data-cap="OpenXR features enabled for the Windows (Standalone) target" id="t-features" class="compact">
 <tr><th style="width:36%">Feature</th><th>Purpose in NEON BREACH</th></tr>
 <tr><td>Oculus Touch Controller Profile</td><td>Bindings for Quest 2/3 and Rift Touch controllers (triggers, grips, A/B/X/Y, sticks, menu)</td></tr>
@@ -26,21 +26,18 @@
 <tr><td>Meta Hand Tracking Aim</td><td>Meta's aim pose and pinch data for hands on Quest</td></tr>
 </table>
 <p>For the Android (Quest) target the same tool also enables <i>Meta Quest Support</i>, <i>Meta Quest: Session</i> and <i>Meta Quest: Camera (Passthrough)</i>. These Android features only appear once the Android Build Support module is installed, which is not the case on the development PC ([[s-constraints]]). The Android loader is already assigned, so installing the module and re-running the tool completes the Quest set-up.</p>
-<figure id="f-xr-validation" class="w90"><img src="../img/r/ed__xr_project_validation.png"><figcaption>XR Plug-in Management &rarr; Project Validation after the fixes: <b>Issues (0) of Checks (12)</b>. Before the fix it reported that <i>Run In Background</i> must be enabled to avoid head-locked rendering when focus is lost.</figcaption></figure>
+<figure id="f-xr-validation" class="w60"><img src="../img/r/ed__xr_project_validation.png"><figcaption>XR Plug-in Management &rarr; Project Validation after the fixes: <b>Issues (0) of Checks (12)</b>. Before the fix it reported that <i>Run In Background</i> must be enabled to avoid head-locked rendering when focus is lost.</figcaption></figure>
 
 <h2>Runtime XR Detection and Desktop Fallback</h2>
-<p>The same scene serves desktop and VR. <code>VRRig</code> decides at runtime whether a headset is present by asking the XR input API for a valid device at the <code>Head</code> node:</p>
-<code-file src="Assets/Scripts/VR/VRRig.cs" lines="27-28" cap="Headset detection in VRRig"/>
-<p>When <code>Active</code> is false, the rig hides its hands and stays idle, and the player uses the desktop camera and HUD. When it becomes true, the camera follows the tracked head, both hands appear, the HUD is replaced by world-space menus and the wrist display, and VR-incompatible effects (camera shake, recoil kick, head bob, FOV changes) are disabled. [[f-vr-detected]] shows the desktop mirror of the game while a simulated headset was connected: the main menu gains the VR-only <i>Mixed Reality Passthrough</i> option and the message "VR headset detected &ndash; use the menu inside the headset".</p>
-<figure id="f-vr-detected" class="w80"><img src="../img/r/vr__desktop_mirror_vr_detected.jpg"><figcaption>Desktop window while an OpenXR headset (Mock Runtime) was active: the VR-only <i>Mixed Reality Passthrough</i> toggle and the "VR headset detected" message appear automatically.</figcaption></figure>
+<p>The same scene serves desktop and VR. <code>VRRig</code> decides at runtime whether a headset is present by asking the XR input API for a valid device at the <code>Head</code> node (<code>InputDevices.GetDeviceAtXRNode(XRNode.Head).isValid</code>).</p>
+<p>When <code>Active</code> is false, the rig hides its hands and stays idle, and the player uses the desktop camera and HUD. When it becomes true, the camera follows the tracked head, both hands appear, the HUD is replaced by world-space menus and the wrist display, and VR-incompatible effects (camera shake, recoil kick, head bob, FOV changes) are disabled; the desktop mirror then shows the VR-only <i>Mixed Reality Passthrough</i> option and the message "VR headset detected". On the desktop the player camera bobs, leans, recoils and changes its field of view; in VR it takes its pose from the tracked <code>CenterEye</code>, renders single-pass instanced stereo and never moves on its own. The parachute's third-person chase camera becomes first person in VR, and the archery zoom is disabled because a headset's field of view is fixed by its lenses.</p>
 
 <h2>VR Rig Construction</h2>
-<p>The rig is generated in code when the player spawns ([[l-rig-start]]). Both hands are children of the <code>CameraPivot</code>, which represents the origin of the tracking space, so their local positions can be set directly from tracked poses. Each hand has a small controller shell and a coloured glow (cyan right, magenta left). The left hand carries the <code>WristDisplay</code> text; the right hand carries the laser sight and, at runtime, the weapon holder. The rig also adds the <code>HandTracking</code> and <code>VRMenu</code> components and creates the <code>ComfortVignette</code> quad in front of the camera.</p>
-<code-file src="Assets/Scripts/VR/VRRig.cs" lines="62-93" cap="VRRig.Start and MakeHand &ndash; building the tracked hands, wrist display, banner, laser and comfort vignette" id="l-rig-start"/>
+<p>The rig is generated in code when the player spawns (<code>VRRig.Start</code> and <code>MakeHand</code>). Both hands are children of the <code>CameraPivot</code>, which represents the origin of the tracking space, so their local positions can be set directly from tracked poses. Each hand has a small controller shell and a coloured glow (cyan right, magenta left). The left hand carries the <code>WristDisplay</code> text; the right hand carries the laser sight and, at runtime, the weapon holder. The rig also adds the <code>HandTracking</code> and <code>VRMenu</code> components and creates the <code>ComfortVignette</code> quad in front of the camera.</p>
 
 <h2>Controller Integration and Input Mapping</h2>
 <p><code>VRRig.Read</code> ([[l-read]]) is called by <code>PlayerController</code> every frame and translates controller state into the shared <code>PlayerInputState</code>. Devices are looked up by role (<code>XRNode.LeftHand</code>, <code>XRNode.RightHand</code>) and read through generic <code>CommonUsages</code>, so the same code works with every enabled interaction profile. Edge detection (<code>trigR &amp;&amp; !pTrigR</code>) converts held buttons into single-frame "pressed" events. A dead-zone of 0.18 on the thumbsticks filters drift.</p>
-<code-file src="Assets/Scripts/VR/VRRig.cs" lines="200-264" cap="VRRig.Read &ndash; translating XR controllers into the shared input state" id="l-read"/>
+<code-file src="Assets/Scripts/VR/VRRig.cs" lines="200-204,238-243,249-262" cap="VRRig.Read (abridged) &ndash; translating XR controllers into the shared input state" id="l-read"/>
 <table data-cap="XR controller mapping (CommonUsages to game actions)" id="t-xr-map" class="compact">
 <tr><th style="width:18%">Controller</th><th style="width:28%">CommonUsage</th><th>Game action (shooter)</th><th style="width:22%">Archery / parachute</th></tr>
 <tr><td>Right</td><td><code>triggerButton</code></td><td>Fire (held) / fire pressed; VR menu click</td><td>Draw and release / flare</td></tr>
@@ -63,22 +60,14 @@
 <li><b>Open palm</b>: every fingertip more than 6&ndash;8 cm from the palm and the thumb spread more than 6 cm, held for 0.4 s, latched so that it fires once per opening.</li>
 </ul>
 <p>The right hand's <i>aim pose</i> is computed from the wrist-to-knuckle vector, so the weapon follows the back of the hand. Right pinch fires and also clicks VR menus, right palm reloads, left pinch throws a grenade and left palm uses a medkit. <code>VRRig.Read</code> applies a hand's gestures only when no controller is held in that hand.</p>
-<code-file src="Assets/Scripts/VR/HandTracking.cs" lines="83-119" cap="HandTracking.UpdateHand &ndash; joint reading, pinch hysteresis, open-palm detection and the aim pose" id="l-hands"/>
+<code-file src="Assets/Scripts/VR/HandTracking.cs" lines="102-118" cap="HandTracking.UpdateHand (core) &ndash; pinch hysteresis, open-palm detection and the aim pose" id="l-hands"/>
 
-<h2>Camera Systems</h2>
-<table data-cap="Camera systems and how each behaves in VR" id="t-cameras" class="compact">
-<tr><th style="width:22%">Camera</th><th>Desktop behaviour</th><th style="width:32%">VR behaviour</th></tr>
-<tr><td>Player camera (shooter)</td><td>First person on a <code>CameraPivot</code>: eye height follows crouching, head bob, lean roll, recoil, screen shake, sprint/dash/ADS FOV changes</td><td>Pose from the tracked <code>CenterEye</code>; no bob, shake, recoil kick or FOV writes; stereo with single-pass instanced rendering</td></tr>
-<tr><td>Split-screen co-op</td><td>Two cameras with half-screen viewport rectangles; each player's body is on its own layer (P1Body / P2Body) and hidden from its own camera</td><td>Not applicable</td></tr>
-<tr><td>Parachute chase camera</td><td>Third-person camera blended with SmoothStep, adaptive near plane (big at altitude, small near the jumper), V toggles first person</td><td>Always first person; the comfort vignette reacts to fall speed</td></tr>
-<tr><td>Archery zoom</td><td>FOV narrows to 28&deg; with breath sway</td><td>Disabled (a headset's FOV is fixed by its lenses)</td></tr>
-<tr><td>Rat Shooter / Farm Sniper</td><td>Porch camera with smoothed aim and ADS zoom / farmer camera with a 4&times;/8&times;/12&times; scope and third-person view</td><td>Farm Sniper: the rifle has a live render-texture scope in VR</td></tr>
-</table>
+<h2>Field-of-View Guard</h2>
 <p>The audit found that several code paths still assigned <code>Camera.fieldOfView</code> while a headset was rendering, which made Unity log a warning on every mode switch in VR. All such writes now go through a guard ([[l-fov]]). The fix was verified both ways: in VR, switching between Archery, Parachute and Shooter produced no warnings; on the desktop, sprinting still widens the FOV from 87.4&deg; to 94.4&deg;.</p>
 <code-file src="Assets/Scripts/Core/Util.cs" lines="8-15" cap="Util.SetFov &ndash; the guard added during the audit" id="l-fov"/>
 
 <h2>Mixed-Reality Implementation (AR Foundation)</h2>
-<p>MR mode is enabled from the VR menu (<i>MIXED REALITY: ON</i>) and applied by <code>ArenaManager.Prepare</code> when a mission starts. <code>MixedReality.Enable</code> ([[l-mr]]) performs five steps:</p>
+<p>MR mode is enabled from the VR menu (<i>MIXED REALITY: ON</i>) and applied by <code>ArenaManager.Prepare</code> when a mission starts. <code>MixedReality.Enable</code> performs five steps:</p>
 <ol>
 <li>Disables every renderer and collider of the virtual arena; keeps its lights (with shadows off) so that enemies stay lit, and turns fog off.</li>
 <li>Builds the room from the tracked boundary: an invisible floor, invisible walls along every boundary edge and 12 spawn points along the perimeter (Chapter 6).</li>
@@ -86,19 +75,12 @@
 <li>Adds an AR Foundation <code>ARCameraManager</code> to the camera and creates an <code>ARSession</code>; on Quest, Unity's Meta OpenXR package uses them to enable passthrough.</li>
 <li>Locks artificial locomotion and turning (<code>VRRig.Read</code> checks <code>MixedReality.Active</code>), so the virtual and real rooms stay aligned.</li>
 </ol>
-<code-file src="Assets/Scripts/VR/MixedReality.cs" lines="36-78" cap="MixedReality.Enable &ndash; hiding the arena, building the room and enabling passthrough" id="l-mr"/>
-<div class="sidebyside">
-<figure id="f-vr-mr-toggle"><img src="../img/r/vr__vr_11_menu_mr_on.jpg"><figcaption>VR main menu after the pointer and trigger switched <i>MIXED REALITY</i> to ON (OpenXR Mock Runtime).</figcaption></figure>
-<figure id="f-vr-mr"><img src="../img/r/vr__vr_13_mr_enemy_in_room.jpg"><figcaption>MR mode running: the arena is hidden and the camera clears to transparent black; an enemy 2.5 m away inside the registered room, with the tracked weapon and wrist display. On a Quest, the black region shows the passthrough camera image.</figcaption></figure>
-</div>
 
 <h2>Haptic Feedback</h2>
 <p><code>Haptics</code> sends impulses through <code>InputDevice.SendHapticImpulse</code> after checking <code>HapticCapabilities.supportsImpulse</code>, which works with any OpenXR controller; gamepads get matching low/high-frequency rumble. Amplitude and duration are derived from game data. A shot pulses the gun hand with a strength that grows with the weapon's recoil; damage pulses both hands in proportion to the damage; explosions rumble according to their distance.</p>
-<code-file src="Assets/Scripts/Core/Haptics.cs" lines="30-37,69-75" cap="Haptics.PulseXR and Haptics.OnShot" id="l-haptics"/>
 
 <h2>World-Space VR User Interface</h2>
-<p>Screen-space overlays do not work in a headset, so the VR interface consists of world-space objects. <code>VRMenuDriver</code> decides which page to show for the current game state: main, pause, shop, game over, comfort and controls, switch mode, or leaderboard. <code>VRMenu</code> places the panel 1.6 m in front of the head, 0.1 m below eye height, and selects rows with a ray from the right hand ([[l-pointer]]). A <code>LineRenderer</code> draws the ray and a cursor marks the hit point; the hovered row is highlighted; the right trigger, the A button or a right-hand pinch clicks; and every click sends a short haptic pulse. During play, a <code>TextMesh</code> on the left wrist shows health, shield, weapon and ammunition, wave and score. Each mini-game can override this text (the archery round and wind, the parachute altitude and distance to the pad).</p>
-<code-file src="Assets/Scripts/VR/VRMenu.cs" lines="193-226" cap="VRMenu.LateUpdate &ndash; hand-ray selection, hover highlight and click with haptic confirmation" id="l-pointer"/>
+<p>Screen-space overlays do not work in a headset, so the VR interface consists of world-space objects. <code>VRMenuDriver</code> decides which page to show for the current game state: main, pause, shop, game over, comfort and controls, switch mode, or leaderboard. <code>VRMenu</code> places the panel 1.6 m in front of the head, 0.1 m below eye height, and selects rows with a ray from the right hand. A <code>LineRenderer</code> draws the ray and a cursor marks the hit point; the hovered row is highlighted; the right trigger, the A button or a right-hand pinch clicks; and every click sends a short haptic pulse. During play, a <code>TextMesh</code> on the left wrist shows health, shield, weapon and ammunition, wave and score. Each mini-game can override this text (the archery round and wind, the parachute altitude and distance to the pad).</p>
 
 <h2>Desktop and Gamepad Input (Input System)</h2>
 <p><code>DesktopInput</code> compiles against both of Unity's input back-ends and addresses keys with <code>KeyCode</code>, so rebinding is stored independently of the back-end. With the Input System package (the project's setting), each <code>KeyCode</code> is translated to an Input System <code>Key</code>. The audit found that the translation assumed contiguous digit keys. In the Input System enum, <code>Digit0</code> comes <i>after</i> <code>Digit9</code> (Digit1 = 41 &hellip; Digit9 = 49, Digit0 = 50), so keys 1/2/3 were read as Left Shift, Right Shift and Left Alt. The corrected mapping is shown in [[l-tokey]].</p>
@@ -115,13 +97,20 @@
 <li>Rendered the tracked camera view to 1600&times;900 images and read back game state with the Unity CLI.</li>
 <li>Disabled the three test features again afterwards, so the shipped configuration contains only the 7 production features.</li>
 </ol>
-<p>These steps were driven from the command line through the Unity CLI's <code>script eval</code>, not added to the game code. Appendix A lists the calls used.</p>
+<p>These steps were driven from the command line through the Unity CLI's <code>script eval</code>, not added to the game code ([[t-mock-calls]]).</p>
+<table data-cap="Calls used in the OpenXR Mock Runtime verification" id="t-mock-calls" class="compact">
+<tr><th style="width:32%">Purpose</th><th>API (OpenXR Plugin test features)</th></tr>
+<tr><td>Simulated device</td><td><i>Mock Runtime</i>, <i>Conformance Automation</i> and <i>Khronos Simple Controller</i> features enabled for Standalone (disabled again afterwards)</td></tr>
+<tr><td>Head and controller poses</td><td><code>MockRuntime.SetSpace(XrReferenceSpaceType.View, ...)</code>; <code>ConformanceAutomationFeature.ConformanceAutomationSetPose(...)</code></td></tr>
+<tr><td>Buttons, triggers, thumbsticks</td><td><code>ConformanceAutomationSetBool</code>, <code>SetFloat</code>, <code>SetVec2</code></td></tr>
+<tr><td>Haptics and game state</td><td>Handler on <code>MockRuntime.onScriptEvent</code>; <code>VRRig.HeadsetPresent</code>, <code>GameManager.VrActive</code>, <code>InputDevices</code> poses</td></tr>
+</table>
 <h3>Results</h3>
 <table data-cap="Results of the OpenXR Mock Runtime verification (22 Nov 2026)" id="t-mock-results" class="compact">
 <tr><th style="width:4%">#</th><th style="width:28%">Check</th><th>Observed result</th><th style="width:11%">Status</th></tr>
 <tr><td>1</td><td>OpenXR session and devices</td><td>Loader <code>OpenXRLoader</code>; session state <code>Focused</code>; devices "Head Tracking &ndash; OpenXR" [HeadMounted, TrackedDevice] and left/right controllers (the Mock Runtime emulates the first bound profile, HTC Vive)</td><td><span class="st-mock">Pass</span></td></tr>
 <tr><td>2</td><td>XR subsystems</td><td>Display subsystem running with 1 render pass (single-pass instanced), eye texture 1512&times;1680; input subsystem running, tracking origin <code>Floor</code>; device "OpenXR Display"</td><td><span class="st-mock">Pass</span></td></tr>
-<tr><td>3</td><td>Headset detection</td><td><code>VRRig.HeadsetPresent = true</code>, <code>GameManager.VrActive = true</code>; desktop menu shows the MR toggle ([[f-vr-detected]])</td><td><span class="st-mock">Pass</span></td></tr>
+<tr><td>3</td><td>Headset detection</td><td><code>VRRig.HeadsetPresent = true</code>, <code>GameManager.VrActive = true</code>; desktop menu shows the MR toggle</td><td><span class="st-mock">Pass</span></td></tr>
 <tr><td>4</td><td>Pose registration</td><td>Right grip set to (0.20, &minus;0.35, 0.35) m in tracking space &rarr; read back exactly by <code>InputDevices</code> &rarr; <code>RightHand</code> world position (0.20, 1.30, 0.35) m (Chapter 6)</td><td><span class="st-mock">Pass</span></td></tr>
 <tr><td>5</td><td>VR menu pointer</td><td>Hand ray hit row 0 "SHOOTER: START MISSION" (<code>hover = 0</code>); the trigger click started the mission (state <code>Playing</code>)</td><td><span class="st-mock">Pass</span></td></tr>
 <tr><td>6</td><td>Firing with the tracked weapon</td><td>4 trigger presses aimed at the nearest enemy: 5 shots fired, 3 hits, 1 kill, score 100; the wrist display updated (ammo 7 &rarr; 6)</td><td><span class="st-mock">Pass</span></td></tr>
@@ -135,12 +124,12 @@
 <tr><td>14</td><td>Hand tracking</td><td>No <code>XRHandSubsystem</code> is created by the Mock Runtime (it has no hand-tracking extension); gesture code is not exercised</td><td><span class="st-hw">Needs hardware</span></td></tr>
 <tr><td>15</td><td>Passthrough camera feed</td><td><code>ARSession.state = None</code>: the Mock Runtime has no camera; the passthrough image needs a Quest</td><td><span class="st-hw">Needs hardware</span></td></tr>
 </table>
-<div class="grid2" id="f-vr-grid-imgs">
+<div class="grid3" id="f-vr-grid-imgs">
 <figure data-nonum><img src="../img/r/vr__vr_02_menu_pointer_eyelevel.jpg"><figcaption>(a) World-space main menu, hand ray on "SHOOTER: START MISSION"</figcaption></figure>
 <figure data-nonum><img src="../img/r/vr__vr_05_combat_framed.jpg"><figcaption>(b) Pistol in the tracked right hand, laser sight on an enemy, wrist display</figcaption></figure>
 <figure data-nonum><img src="../img/r/vr__vr_08_locomotion_vignette.jpg"><figcaption>(c) Stick locomotion at 4.13 m/s with the tunnelling vignette</figcaption></figure>
 <figure data-nonum><img src="../img/r/vr__vr_15_archery_full_draw.jpg"><figcaption>(d) VR archery: bow at full draw in the tracked hand, wrist shows round, arrows and wind</figcaption></figure>
-<figure data-nonum><img src="../img/r/vr__vr_18_parachute_plane_door.jpg"><figcaption>(e) VR parachute: plane door, world-space banner, wrist altimeter</figcaption></figure>
+<figure data-nonum id="f-vr-mr"><img src="../img/r/vr__vr_13_mr_enemy_in_room.jpg"><figcaption>(e) MR mode: arena hidden, camera clears to transparent black (passthrough on a Quest); an enemy inside the registered room</figcaption></figure>
 <figure data-nonum><img src="../img/r/vr__vr_09_snap_turn_blink.jpg"><figcaption>(f) After a 45&deg; snap turn: enemies that were to the side are now ahead</figcaption></figure>
 </div>
 <figure id="f-vr-grid" style="margin-top:-3mm"><figcaption>Frames rendered from the tracked head pose during the Mock Runtime session. All content, poses and interactions are the real game responding to OpenXR input; the only simulated part is the device itself.</figcaption></figure>

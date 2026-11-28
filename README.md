@@ -7,7 +7,7 @@
 **End-semester AR/VR project** · Desktop · Split-screen co-op · VR (OpenXR, controllers + hand tracking) · Mixed reality (Meta Quest passthrough)
 
 ![Unity](https://img.shields.io/badge/Unity-6000.5.5f1-000000?logo=unity&logoColor=white)
-![C#](https://img.shields.io/badge/C%23-123_scripts_·_~30.8k_lines-512BD4?logo=csharp&logoColor=white)
+![C#](https://img.shields.io/badge/C%23-129_scripts_·_~30.4k_lines-512BD4?logo=csharp&logoColor=white)
 ![Render pipeline](https://img.shields.io/badge/Render_pipeline-Built--in_+_custom_post--FX-informational)
 ![XR](https://img.shields.io/badge/XR-OpenXR_·_XR_Hands_·_AR_Foundation_·_Meta_OpenXR-success)
 ![Input](https://img.shields.io/badge/Input-Input_System_1.19-blueviolet)
@@ -28,7 +28,7 @@ Neon Breach is one Unity project with **five playable games** that share one pla
 
 Almost everything is **generated in code**: models, textures, materials, sounds, music, levels and the HUD. The repository holds no imported art or audio packs.
 
-> **About the screenshots.** Every image in this README is an unedited frame from the actual game, captured on 22 Nov 2026 from the Unity Editor's Game view (1920×1080) in Play mode while the games were running. Frames were only resized to 1600×900 and saved as JPEG. A temporary capture script drove the session: it sent real Input System keyboard and mouse events, auto-aimed at targets (the same way the project's own `AutoTest` smoke test does) and fast-forwarded only the long canopy descent. No image is AI-generated, mocked up or rendered offline.
+> **About the screenshots.** Every image in this README is an unedited frame from the actual game, captured from the Unity Editor's Game view in Play mode while the games were running (main walkthrough on 22 Nov 2026 at 1920×1080, resized to 1600×900 JPEG; cinematic intro frames on 28 Nov 2026 at 2560×1440 and 1440×1080). A temporary capture script drove the 22 Nov session: it sent real Input System keyboard and mouse events, auto-aimed at targets (the same way the project's own `AutoTest` smoke test does) and fast-forwarded only the long canopy descent. No image is AI-generated, mocked up or rendered offline.
 
 ---
 
@@ -37,7 +37,7 @@ Almost everything is **generated in code**: models, textures, materials, sounds,
 1. [Architecture](#1-architecture)
    - [System overview](#11-system-overview) · [Scenes and navigation](#12-scenes-and-navigation) · [Game state machine](#13-core-game-state-machine) · [Mode switching](#14-mode-switching-lifecycle) · [Input abstraction](#15-input-abstraction) · [Rendering, content and audio](#16-procedural-content-rendering-and-audio-pipeline) · [Rat Shooter](#17-rat-shooter-architecture) · [Farm Sniper](#18-farm-sniper-architecture) · [Editor tooling and testing](#19-editor-tooling-build-and-test-workflow) · [Project structure](#110-project-structure)
 2. [Gameplay walkthrough (screenshots)](#2-gameplay-walkthrough-screenshots)
-   - [Main menu and settings](#21-main-menu-settings-and-localisation) · [Tutorial](#22-interactive-tutorial) · [Shooter](#23-shooter) · [Archery](#24-archery) · [Parachute](#25-parachute) · [Rat Shooter](#26-rat-shooter) · [Farm Sniper](#27-farm-sniper)
+   - [Cinematic intro](#cinematic-startup-intro) · [Main menu and settings](#21-main-menu-settings-and-localisation) · [Tutorial](#22-interactive-tutorial) · [Shooter](#23-shooter) · [Archery](#24-archery) · [Parachute](#25-parachute) · [Rat Shooter](#26-rat-shooter) · [Farm Sniper](#27-farm-sniper)
 3. [Features](#3-features)
 4. [Controls](#4-controls)
 5. [Getting started](#5-getting-started)
@@ -111,6 +111,7 @@ flowchart TB
 flowchart TB
     subgraph S0["NeonBreach.unity - build index 0"]
         direction LR
+        INTRO(["Cinematic intro<br/>first launch only"])
         MENU(["Main menu"])
         SH["Shooter<br/>waves, shop, co-op"]
         AR["Archery"]
@@ -118,6 +119,7 @@ flowchart TB
         TUT["Tutorial"]
         OPT["Settings · Leaderboard<br/>How to play"]
         RES["Results / game over"]
+        INTRO --> MENU
         MENU --> SH
         MENU --> AR
         MENU --> PA
@@ -148,6 +150,8 @@ flowchart TB
     S2 ==>|MAIN MENU| S0
     S1 ==>|BACK TO NEON BREACH| S0
 ```
+
+On a new launch the **cinematic intro** (theatre curtains opening on a neon stage, "WELCOME TO NEON BREACH") plays before the main menu. It runs on its own uGUI Canvas and only hides the IMGUI `HUD` while it plays, so the menu itself is unchanged. Coming back to the menu from any mode, or reloading `NeonBreach.unity` from Rat Shooter, goes straight to the menu.
 
 Farm Sniper is a standalone level. Open it from the editor menu **Neon Breach > Farm Sniper**; its title screen links back to Neon Breach. Rat Shooter starts from the gold **RAT SHOOTER** button on the main menu. `GameBootstrap` leaves both scenes alone because each contains a `StandaloneSceneMarker`.
 
@@ -360,7 +364,7 @@ flowchart TB
 NeonBreach/
 ├── Assets/
 │   ├── Scenes/              NeonBreach.unity (0) · FarmSniper.unity (1) · RatShooter.unity (2)
-│   ├── Scripts/             main game (namespace NeonBreach): 61 scripts, ~15.3k lines
+│   ├── Scripts/             main game (namespace NeonBreach): 67 scripts, ~16.3k lines
 │   │   ├── Core/            GameManager, GameSettings, KeyBindings, Loc, Progression, Stats, Sfx, AudioSynth,
 │   │   │                    BinauralFilter, Haptics, Mats, ProcTex, Perf, Layers, HitZone, Util, AutoTest
 │   │   ├── Player/          PlayerController, PlayerInputState, DesktopInput, GamepadInput, Tutorial, TrainingTarget
@@ -369,17 +373,18 @@ NeonBreach/
 │   │   ├── Modes/           ModeManager, ArcheryMode, Arrow, ArcheryTarget, WindSystem, ParachuteMode,
 │   │   │                    ParachuteController, SkydiveSettings, SkydiverRig, Ring, HUDModes
 │   │   ├── UI/              HUD, HUDMenus, HUDShop, HUDGameOver (IMGUI partial class)
+│   │   ├── Intro/           CinematicIntro, IntroCurtain, IntroTextFX, IntroArt, IntroAudio (startup intro, uGUI)
 │   │   ├── VR/              VRRig, HandTracking, ComfortVignette, VRMenu, VRMenuDriver, MixedReality
 │   │   ├── World/           WorldBuilder, ArenaManager, ArenaInfo, GameBootstrap
 │   │   ├── Rendering/       PostFX
-│   │   └── Editor/          SceneBuilder, ProjectBootstrap, ProjectMenu, RenderingSettingsGuard
-│   ├── RatShooter/          cartoon game (namespace NeonBreach.RatShooter): 34 scripts, ~8.3k lines
+│   │   └── Editor/          SceneBuilder, ProjectBootstrap, ProjectMenu, RenderingSettingsGuard, IntroSceneSetup
+│   ├── RatShooter/          cartoon game (namespace NeonBreach.RatShooter): 34 scripts, ~7.6k lines
 │   │   ├── Scripts/         Core · Player · Mice · World · FX · UI · Audio · Rendering
 │   │   ├── Shaders/         RatToon, RatSky, RatFX
 │   │   ├── Editor/          RatShooterSceneBuilder
 │   │   ├── Generated/       saved meshes, textures, materials
 │   │   └── Prefabs/         5 mouse variants + rifle
-│   ├── FarmSniper/          sniper game (namespace NeonBreach.Farm): 28 scripts, ~7.2k lines
+│   ├── FarmSniper/          sniper game (namespace NeonBreach.Farm): 28 scripts, ~6.6k lines
 │   │   ├── Scripts/         Gameplay · World · UI · VR · Audio
 │   │   ├── Editor/          FarmSceneBuilder
 │   │   └── Generated/       saved meshes, textures, materials, lighting, rat NavMesh
@@ -404,6 +409,7 @@ NeonBreach/
 | Enemies | Wave director, enemy AI, enemy projectiles, pickups | `WaveManager`, `Enemy`, `EnemyProjectile`, `Pickup` |
 | Modes | Archery and Parachute mini-games and switching between modes | `ModeManager`, `MiniGame`, `ArcheryMode`, `ParachuteMode`, `ParachuteController` |
 | UI | IMGUI HUD, menus, shop, game over and analytics | `HUD` (partial: `HUDMenus`, `HUDShop`, `HUDGameOver`, `HUDModes`) |
+| Intro | Cinematic startup sequence before the main menu: curtain mesh, title effects, procedural art and sound | `CinematicIntro`, `IntroCurtain`, `IntroTextFX`, `IntroArt`, `IntroAudio` |
 | VR | Headset rig, hand tracking, comfort, VR menus, passthrough | `VRRig`, `HandTracking`, `ComfortVignette`, `VRMenuDriver`, `MixedReality` |
 | World | Arena generation, arena switching, runtime NavMesh | `WorldBuilder`, `ArenaManager`, `GameBootstrap` |
 | Rendering | Post-processing on the Built-in pipeline | `PostFX`, `NB_PostFX.shader` |
@@ -415,6 +421,21 @@ NeonBreach/
 ## 2. Gameplay walkthrough (screenshots)
 
 Click any image to open it at full size.
+
+### Cinematic startup intro
+
+Plays once per launch before the main menu: procedurally generated velvet curtains with neon piping open on a lit stage, revealing **WELCOME TO NEON BREACH** with synchronised audio and a skip button.
+
+<table>
+<tr>
+<td width="50%" valign="top"><a href="Docs/ESE_Report/img/r/intro__01_closed.jpg"><img src="Docs/ESE_Report/img/r/intro__01_closed.jpg" alt="Closed curtains on the neon stage: spotlight, scalloped valance, footlights and neon piping" width="100%"></a><br><sub>2.1 s: closed velvet curtains with neon piping, scalloped valance, spotlight and footlights</sub></td>
+<td width="50%" valign="top"><a href="Docs/ESE_Report/img/r/intro__02_opening.jpg"><img src="Docs/ESE_Report/img/r/intro__02_opening.jpg" alt="Curtains parting as NEON BREACH ignites from the centre" width="100%"></a><br><sub>4.45 s: curtains parting (hems trailing the tops) while NEON BREACH ignites from the centre</sub></td>
+</tr>
+<tr>
+<td width="50%" valign="top"><a href="Docs/ESE_Report/img/r/intro__03_title.jpg"><img src="Docs/ESE_Report/img/r/intro__03_title.jpg" alt="Finished title held on the open stage with bunched curtains at the sides" width="100%"></a><br><sub>8.0 s: finished title held on the open stage with bunched curtains at the sides</sub></td>
+<td width="50%" valign="top"><a href="Docs/ESE_Report/img/r/intro__05_4x3.jpg"><img src="Docs/ESE_Report/img/r/intro__05_4x3.jpg" alt="Responsive 4:3 layout (1440x1080): title scaled to fit between the opened curtains" width="100%"></a><br><sub>4:3 aspect ratio (1440×1080): title automatically scales to fit between the opened curtains</sub></td>
+</tr>
+</table>
 
 ### 2.1 Main menu, settings and localisation
 
@@ -701,6 +722,7 @@ Switching modes: main-menu buttons, pause menu → **SWITCH MODE**, the results 
 | **Interactive first-run tutorial** (look, move, sprint + jump, shoot targets, reload, ADS, grenade, power-up) that adapts to keyboard / gamepad / VR controllers / hands | `Tutorial.cs`, `TrainingTarget.cs` |
 | **Settings**: gameplay, graphics (quality level, post FX, bloom, vsync, fullscreen, FPS), audio (HRTF), **key rebinding**, VR comfort, **language** (English / Español / Français / Deutsch) | `HUDMenus.cs`, `KeyBindings.cs`, `Loc.cs` |
 | **Gameplay analytics** after game over: death **heat map** over a top-down map of the arena (all runs), **damage dealt vs taken over time**, kills per enemy type, accuracy per weapon | `HUDGameOver.cs`, `Stats.cs` |
+| **Cinematic startup intro** (first launch only): two velvet curtains with neon piping open on a neon stage (the cloth bunches up, the hems lag and sway), stage lights and footlights come up, and **WELCOME TO NEON BREACH** fades and zooms in with closing letter spacing, a cyan glow, the magenta split of the menu title and a neon-tube ignition flicker. Procedural music, theatre ambience, curtain sweep and a reveal hit synced to the title. Fades into the existing main menu. **SKIP INTRO** button (or Esc / Enter / Space / gamepad Start or A). Every duration, curve, colour, text, volume and optional custom audio clip is set in the Inspector on the **Cinematic Intro** object (**Neon Breach → Cinematic Intro → Select Intro Settings**; *Replay* in Play mode) | `Intro/`, `Editor/IntroSceneSetup.cs` |
 | **UI transitions and hover polish**: smooth screen fade-in on menu entry, mission/mode start and results screens, plus pulsing hover glow and accent bars on buttons and mode cards | `HUD.cs`, `HUDModes.cs`, `GameManager.cs` |
 
 ### Rat Shooter details
@@ -727,6 +749,8 @@ Switching modes: main-menu buttons, pause menu → **SWITCH MODE**, the results 
 **VR controllers:** L-stick move · R-stick turn (pull back = crouch) · R-trigger fire · R-grip reload · A jump · B next weapon · L-trigger grenade · L-grip melee · X flashlight · Y medkit · L-stick click sprint · R-stick click dash · Menu = pause.
 
 **Hands:** see the hand-tracking row in [VR / XR](#vr--xr).
+
+**Startup intro:** Esc, Enter, Space, gamepad Start or A, or the **SKIP INTRO** button (bottom right) skip to the main menu.
 
 **Mode switching:** F5 shooter · F6 archery · F7 parachute (or the menus). Pressing the key of the mode you are already in does nothing (use Pause → Restart).
 
@@ -764,7 +788,7 @@ git clone https://github.com/sawantyash07/ARVR-EndSem-Project-The-NeonBreach-.gi
 
 1. Unity Hub → **Add → Add project from disk** → select the cloned folder (the one that contains `Assets`, `Packages` and `ProjectSettings`).
 2. Open it with **Unity 6000.5.5f1** (the version the project is stamped with). The first open imports the packages listed in `Packages/manifest.json`, which takes a few minutes. `Library/` is not in the repository and is regenerated.
-3. Open `Assets/Scenes/NeonBreach.unity` and press **Play**. If the scene is missing anything, use **Neon Breach → Build Game Scene (rebuild)**.
+3. Open `Assets/Scenes/NeonBreach.unity` and press **Play**. The cinematic intro plays, then the main menu appears. If the scene is missing anything, use **Neon Breach → Build Game Scene (rebuild)** (it adds the intro too). To change the intro, select **Neon Breach → Cinematic Intro → Select Intro Settings**; untick *Play Intro* to turn it off, or start a build with `-nbSkipIntro`.
 4. Rat Shooter starts from its main-menu button. Farm Sniper: **Neon Breach → Farm Sniper → Play Farm Scene**.
 
 Rebuilding the generated levels: **Neon Breach → Rat Shooter → Build Rat Shooter Scene (rebuild)** and **Neon Breach → Farm Sniper → Build Farm Scene (rebuild)**. Both regenerate their scene, meshes, textures, materials and prefabs.
@@ -799,6 +823,7 @@ Standalone OpenXR loader, controller profiles (Touch, Quest Touch Plus/Pro, Inde
 - **Rat Shooter** was play-tested in the Editor through scripted calls: main menu → RAT SHOOTER (fade) → title → countdown → hits and misses, reload, aim down sights, pause, how to play, level clear, next level, game over, victory, back to the main menu. It compiles with no errors or warnings and runs at about 340 FPS in the Editor.
 - **README screenshot session (22 Nov 2026):** every game was played again in the Editor (Play mode, 1920×1080) with real Input System keyboard/mouse events. Results from that session: shooter wave 2 reached with 21 kills; archery 30/30 hits with 27 bullseyes; parachute landed 36 m from the pad; Rat Shooter level 1 cleared with 3 stars and all 5 levels won; Farm Sniper mission complete with 15/15 rats at 88 % accuracy.
 - **Number-key fix (22 Nov 2026):** `DesktopInput.ToKey` used `Key.Digit0 + n`, but the Input System's `Key` enum puts `Digit0` after `Digit9`, so 1/2/3 were read as Shift/Alt (this also broke the shop's 1-8 quick-buy keys and Farm Sniper's 1/2/3 difficulty keys). After the fix, Input System key events in Play mode switched weapons as expected: 2 → rifle, 3 → scatter cannon, 1 → pistol, and Shift no longer changes weapon.
+- **Cinematic intro (28 Nov 2026):** compiled with no errors or warnings, then played in the Editor (Play mode, 2560×1440): it starts by itself on Play, hides the HUD, and after about 9.6 s re-enables the HUD, fades the menu in and restores the menu music. Also checked: Skip (0.45 s fade to the menu), starting Archery in the middle of the intro (the intro ends at once and the mode runs), returning to the menu (no replay), reloading `NeonBreach.unity` as Rat Shooter does (no replay). The Console stayed at 0 errors and 0 warnings. The layout was also checked at 4:3 (1440×1080): the title is scaled to fit between the opened curtains. A Windows player built with the intro had 0 build errors and 0 warnings and ran windowed for 30 s with no exceptions in its log (frames were captured in the Editor only).
 - **Not tested on hardware:** VR, hand tracking, haptics and mixed reality need a headset (a Quest for passthrough) and were only compile-checked. Gamepad / split-screen co-op were exercised without a physical gamepad.
 
 ## 9. Known issues and limitations
@@ -812,9 +837,9 @@ Standalone OpenXR loader, controller profiles (Touch, Quest Touch Plus/Pro, Inde
 | Area | Technology |
 |---|---|
 | Engine | Unity 6000.5.5f1, Built-in Render Pipeline |
-| Language | C# (123 scripts, ~30.8k lines), ShaderLab/HLSL (5 shaders) |
+| Language | C# (129 scripts, ~30.4k lines), ShaderLab/HLSL (5 shaders) |
 | Packages | Input System 1.19 · AI Navigation 2.0 · XR Plug-in Management 4.5 · OpenXR 1.17 · XR Hands 1.8 · AR Foundation 6.5 · Meta OpenXR 2.5 |
-| UI | Immediate-mode GUI (IMGUI), authored for 1080p and scaled |
+| UI | Immediate-mode GUI (IMGUI), authored for 1080p and scaled; uGUI Canvas (CanvasScaler, CanvasGroup) for the startup intro |
 | Audio | Procedural synthesis + custom binaural (HRTF-style) filter |
 | Platforms | Windows desktop · PC VR (OpenXR) · Meta Quest (standalone + mixed reality) |
 

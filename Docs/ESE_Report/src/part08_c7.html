@@ -1,33 +1,42 @@
 <h1 class="chap" data-chap="8" data-crit="7" id="ch8">Interaction, UI/UX &amp; User Experience</h1>
 <div class="evidence"><b class="h">Evidence in this chapter</b>
-<ul><li>Main menu, game-mode selection and the complete navigation flow between the four game modes ([[f-menu-now]], [[f-nav]]).</li>
+<ul><li><b>Cinematic startup intro</b> (28 Nov 2026): theatre curtains open on a neon stage and reveal the title, with sound, a skip button and a seamless hand-over to the menu ([[s-intro]], [[t-intro]], [[f-intro-open]]).</li>
+<li>Main menu, game-mode selection and the complete navigation flow between the four game modes ([[f-menu-now]], [[f-nav]]).</li>
 <li>The gameplay HUD of every mode &ndash; Shooter, Archery, Parachute and Rat Shooter &ndash; with an element-by-element description ([[t-hud]]).</li>
 <li>UI/UX polish added in the final pass (27 Nov 2026): animated hover feedback on all neon buttons, animated mode cards, fade transitions on every mode start and return to menu, a fading results screen and the archery trajectory guide ([[t-polish]]).</li>
 <li>Pause, results, game-over, tutorial, help and settings screens; controls for keyboard/mouse, gamepad and VR controllers ([[t-controls]]); a heuristic usability review ([[t-heuristics]]).</li></ul></div>
 
 <h2>Design Goals and Implementation Approach</h2>
 <p>The user interface was designed around four goals: (1) a <b>single consistent neon identity</b> (dark translucent panels, cyan borders, white bold text, magenta and yellow accents) across all modes; (2) <b>immediate readability</b> during fast action, so that health, ammunition, score and objectives are always at the screen edges and never over the crosshair; (3) <b>discoverability</b>, so that every screen shows the keys it accepts; and (4) <b>device independence</b>, so that the same menus work with a mouse, a gamepad and a VR laser pointer.</p>
-<p>The desktop interface is drawn with Unity's immediate-mode GUI (IMGUI) by one partial class, <code>HUD</code>, split over <code>HUD.cs</code>, <code>HUDMenus.cs</code>, <code>HUDGameOver.cs</code>, <code>HUDShop.cs</code> and <code>HUDModes.cs</code>. All layout is written in a 1920&times;1080 reference space and scaled by <i>S = screen height / 1080</i>, so the layout is identical at every resolution and in each half of split-screen co-op. The Rat Shooter scene has its own cartoon-styled HUD (<code>RatHUD</code>) with the same structure. In VR the same menu content is shown on a world-space panel operated with a controller laser pointer (Section 8.11).</p>
+<p>The desktop interface is drawn with Unity's immediate-mode GUI (IMGUI) by one partial class, <code>HUD</code>, split over <code>HUD.cs</code>, <code>HUDMenus.cs</code>, <code>HUDGameOver.cs</code>, <code>HUDShop.cs</code> and <code>HUDModes.cs</code>. All layout is written in a 1920&times;1080 reference space and scaled by <i>S = screen height / 1080</i>, so the layout is identical at every resolution and in each half of split-screen co-op. The Rat Shooter scene has its own cartoon-styled HUD (<code>RatHUD</code>) with the same structure. In VR the same menu content is shown on a world-space panel operated with a controller laser pointer. The startup intro is the one exception to IMGUI: it is a uGUI Canvas, because it needs meshes, mesh effects and CanvasGroup fades.</p>
+
+<h2 id="s-intro">Cinematic Startup Intro</h2>
+<p>When the application starts, a short cinematic plays before the main menu, in the manner of the curtain opening before a film. Two dark-red velvet curtains with magenta neon piping hang closed under a scalloped valance while a spotlight comes up and footlights switch on from the centre outwards. After a short pause they part like real traveller curtains, bunching up at the sides while their hems lag behind and sway, and reveal a neon stage on which <b>WELCOME TO NEON BREACH</b> fades in, zooms in slightly and lights up like a neon tube in the cyan and magenta of the menu title. The title holds, then the intro fades to the HUD's dark fade colour and the existing main menu fades in from it. [[t-intro]] gives the timeline with the default Inspector values and [[f-intro-stage]]&ndash;[[f-intro-43]] show frames from the running game (Play mode, 28 Nov 2026).</p>
+<table data-cap="Timeline of the startup intro (default values; every duration is set in the Inspector)" id="t-intro" class="compact">
+<tr><th style="width:15%">Phase</th><th style="width:12%">Time (s)</th><th>Picture</th><th style="width:31%">Sound</th></tr>
+<tr><td>Fade-in</td><td>0 &ndash; 1.0</td><td>From black to the closed curtains; the centre spotlight comes up; footlights switch on from the centre outwards with a short flicker</td><td>Music drone in D minor; theatre room tone and audience murmur</td></tr>
+<tr><td>Closed hold</td><td>1.0 &ndash; 2.4</td><td>Light leaks through the seam between the curtains; dust motes drift in the spotlight beam; film grain and vignette</td><td>Murmur continues</td></tr>
+<tr><td>Curtains open</td><td>2.4 &ndash; 6.0</td><td>Eased opening (slow start, long glide, soft settle); the cloth bunches up, the hems trail and sway past the stop; the stage, its neon floor grid and coloured haze are revealed as the stage lights rise</td><td>Curtain sweep (fabric swoosh, track rumble, carrier ticks) panned outwards with each curtain; the audience hushes; low pulses and a rising chord</td></tr>
+<tr><td>Title reveal</td><td>3.5 &ndash; 5.7</td><td>WELCOME TO appears letter by letter from the centre while its spacing closes; NEON BREACH ignites at 4.16 s with a neon flicker, its glow grows and the magenta layer locks into place; zoom 0.86 &rarr; 1; divider and underline lines extend</td><td>A riser ending exactly on the ignition: sub boom, metallic &ldquo;shing&rdquo;, neon buzz gated by the same flicker pattern, then a bright chord with arpeggiated bells</td></tr>
+<tr><td>Hold</td><td>6.0 &ndash; 8.4</td><td>A light sweep runs across the letters; slow push-in to 1.035</td><td>Music resolves to a suspended chord</td></tr>
+<tr><td>Hand-over</td><td>8.4 &ndash; 9.6, then 0.8</td><td>The title fades first, then the stage; the main menu fades in through the HUD's own <code>FadeIn</code></td><td>Intro sound fades out; the menu music fades back in</td></tr>
+</table>
+<div class="grid2">
+<figure id="f-intro-stage"><img src="../img/r/intro__01_closed.jpg"><figcaption>2.1 s: the procedurally generated stage with the curtains closed &ndash; velvet folds in the spotlight, neon piping at the seam, scalloped valance, footlights.</figcaption></figure>
+<figure id="f-intro-open"><img src="../img/r/intro__02_opening.jpg"><figcaption>4.45 s: the curtains part (hems trailing the tops) and NEON BREACH ignites from the centre while the magenta layer converges.</figcaption></figure>
+<figure id="f-intro-title"><img src="../img/r/intro__03_title.jpg"><figcaption>8.0 s: the finished title held on the open stage, curtains bunched at the sides.</figcaption></figure>
+<figure id="f-intro-43"><img src="../img/r/intro__05_4x3.jpg"><figcaption>The same moment at 4:3 (1440&times;1080): the title is scaled to fit between the curtains.</figcaption></figure>
+</div>
+<p><b>Interaction.</b> A subtle <i>SKIP INTRO</i> button with an <i>ESC</i> key hint fades in at the bottom right after 0.6 s; it highlights on hover and, like Esc, Enter, Space or gamepad Start/A, ends the intro with a 0.45 s fade instead of a hard cut. An idle mouse pointer is hidden after 2.2 s, as in a video player, and reappears when the mouse moves. The intro plays only once per application launch: returning to the menu from any mode, or from the Rat Shooter scene, never replays it. It also gives way immediately if a mode is started with F5&ndash;F7 while it runs, and it is skipped in VR, where a screen-space overlay cannot be seen inside the headset.</p>
+<p><b>Responsive layout and configuration.</b> The Canvas uses a <code>CanvasScaler</code> with a 1920&times;1080 reference matched to the screen height, like the IMGUI HUD. Everything that depends on the width &ndash; the curtain meshes, the number of valance swags, the footlights, the spotlight beam &ndash; is recomputed from the Canvas size whenever it changes, and the title is scaled to fit the gap between the opened curtains, which was checked at 16:9 (2560&times;1440) and 4:3 (1440&times;1080) ([[f-intro-43]]). All 52 settings &ndash; durations, both animation curves, curtain colours, folds and sway, texts and font, letter spacing, zoom, glow and flicker, each volume, optional replacement audio clips, vignette, grain and dust &ndash; are Inspector fields of the <i>Cinematic Intro</i> object, reachable from <i>Neon Breach &rarr; Cinematic Intro &rarr; Select Intro Settings</i>; its <i>Replay Intro</i> context menu replays it in Play mode to try them out.</p>
 
 <h2>Main Menu and Game-Mode Selection</h2>
-<p>The main menu ([[f-menu-now]]) is the hub of the application. The left column lists the four game modes with each mode's all-time best score, followed by the tutorial, leaderboard and statistics, settings, help and quit. The right panel is the <i>mission set-up</i> for the shooter (solo or split-screen co-op, difficulty, arena and call-sign). Behind the menu the camera slowly orbits the live arena, so the menu already shows the game world.</p>
+<p>The main menu ([[f-menu-now]]) is the hub of the application. The left column lists the four game modes with each mode's all-time best score (Shooter starts a mission with the set-up on the right, Archery builds the range, Parachute puts the player in the aircraft door at 3,000 m, Rat Shooter fades to its own scene), followed by the tutorial, leaderboard and statistics, settings (six tabs), how to play and quit. The right panel is the <i>mission set-up</i> for the shooter (solo or split-screen co-op, difficulty, arena and call-sign). Behind the menu the camera slowly orbits the live arena, so the menu already shows the game world.</p>
 <figure id="f-menu-now"><img src="../img/r/new__01_main_menu.jpg"><figcaption>Main menu captured on 27 Nov 2026 after the polish pass: four game-mode buttons with best scores (Rat Shooter in its gold accent), tutorial, leaderboard, settings, help and quit; mission set-up panel on the right.</figcaption></figure>
-<table data-cap="Main-menu entries and what each one does" id="t-menu" class="compact">
-<tr><th style="width:28%">Entry</th><th>Action</th></tr>
-<tr><td>SHOOTER &ndash; START MISSION</td><td>Starts the wave shooter with the set-up chosen on the right (or the interactive tutorial on the very first run)</td></tr>
-<tr><td>ARCHERY &middot; best <i>n</i></td><td>Builds the archery range and starts round 1 of 3 (10 arrows each)</td></tr>
-<tr><td>PARACHUTE &middot; best <i>n</i></td><td>Builds the island and places the player in the aircraft door at 3,000 m</td></tr>
-<tr><td>RAT SHOOTER &middot; best <i>n</i></td><td>Fades out and loads the separate <code>RatShooter.unity</code> scene through <code>SceneFader</code></td></tr>
-<tr><td>TUTORIAL</td><td>Eight guided steps: look, move, sprint and jump, shoot targets, reload, aim down sights, grenade, power-ups</td></tr>
-<tr><td>LEADERBOARD &amp; STATS</td><td>Local leaderboard and lifetime statistics, with a reset option protected by confirmation</td></tr>
-<tr><td>SETTINGS</td><td>Six tabs: Gameplay, Graphics, Audio, Controls (key rebinding), VR Comfort and Language</td></tr>
-<tr><td>HOW TO PLAY / QUIT</td><td>Controls and rules of every mode / exits the application</td></tr>
-</table>
 <p>From inside any mode, the pause menu's <i>SWITCH MODE</i> panel and the results screen show the three in-scene modes as <b>mode cards</b> (name and hot-key, a short description and the best score), and the F5, F6 and F7 keys switch directly between Shooter, Archery and Parachute.</p>
 
 <h3>Button and mode-card feedback added in the polish pass</h3>
-<p>Before the polish pass a neon button only changed colour on hover. All buttons now share the hover language that the Rat Shooter button already used: a soft <b>pulsing outer glow</b> (two rings whose alpha follows a 5 rad/s sine), a white <b>left accent bar</b> and a white label; a <i>selected</i> button keeps a cyan accent bar. Each mode card now sits on its own panel that brightens and pulses its border while the pointer is over it, so the card behaves as one large target rather than a small button with loose text under it. Because the change is inside the shared <code>Button</code> method, every menu (main, pause, settings, results, shop) received it at once without layout changes ([[l-button]]).</p>
-<code-file src="Assets/Scripts/UI/HUD.cs" lines="228-252" cap="Shared neon button with the new hover glow and accent bar" id="l-button"/>
+<p>Before the polish pass a neon button only changed colour on hover. All buttons now share the hover language that the Rat Shooter button already used: a soft <b>pulsing outer glow</b> (two rings whose alpha follows a 5 rad/s sine), a white <b>left accent bar</b> and a white label; a <i>selected</i> button keeps a cyan accent bar. Each mode card now sits on its own panel that brightens and pulses its border while the pointer is over it, so the card behaves as one large target rather than a small button with loose text under it. Because the change is inside the shared <code>Button</code> method, every menu (main, pause, settings, results, shop) received it at once without layout changes.</p>
 <div class="sidebyside">
 <figure id="f-pause-hover"><img src="../img/r/new__11_pause.jpg"><figcaption>Pause menu with the pointer over SETTINGS: glow, accent bar and highlighted label (27 Nov 2026).</figcaption></figure>
 <figure id="f-cards"><img src="../img/r/new__07_results.jpg"><figcaption>Archery results screen with the new mode-card panels (Shooter, Archery, Parachute) and best scores.</figcaption></figure>
@@ -36,7 +45,8 @@
 <h2>Navigation Flow and Scene Transitions</h2>
 <p>[[f-nav]] shows every path between screens. Shooter, Archery and Parachute live in the main scene and are switched by <code>ModeManager</code> without reloading; the Rat Shooter is a separate scene, loaded asynchronously behind a fade by <code>SceneFader</code>, and its own menu returns to the main scene the same way.</p>
 <figure class="diagram" id="f-nav"><pre class="mermaid">flowchart LR
-  M["Main menu"] -->|START MISSION| SH["Shooter waves"]
+  I["Cinematic intro<br/>first launch only"] -->|ends or SKIP| M["Main menu"]
+  M -->|START MISSION| SH["Shooter waves"]
   M -->|ARCHERY| AR["Archery range"]
   M -->|PARACHUTE| PA["Skydive"]
   M -->|RAT SHOOTER<br/>SceneFader| RS["Rat Shooter scene"]
@@ -54,16 +64,11 @@
   RE -->|PLAY AGAIN| AR
   RE -->|MAIN MENU| M
   RS -->|Main menu button<br/>SceneFader| M</pre><figcaption>Navigation flow between the menus and the four game modes.</figcaption></figure>
-<p><b>Consistent transitions (polish pass).</b> Previously only the scene change to the Rat Shooter faded; switching between in-scene modes cut instantly. A short <b>fade from black</b> now plays whenever a shooter mission, the tutorial, an archery or parachute run starts and whenever the player returns to the main menu (0.5&ndash;0.6 s, smoothstep easing), and the archery and parachute <b>results screen fades in</b> over 0.5 s instead of appearing at once. The fade is drawn last in <code>OnGUI</code>, over every other element, and is driven by unscaled time, so it also works while the game is paused or in slow motion. The fade clock starts on the first frame that is actually drawn after the request, not when it is requested: the first test showed that building the Parachute island takes longer than the fade itself, so without this the fade was used up before the first frame appeared ([[l-fade]], [[f-fade]], [[f-resfade]]). To let a whole screen fade, the <code>Fill</code> helper now multiplies its colour by the alpha of <code>GUI.color</code>; this is invisible everywhere else because that alpha is normally 1.</p>
-<code-file src="Assets/Scripts/UI/HUD.cs" lines="122-143" cap="Fade-in transition used on every mode start and on return to the menu" id="l-fade"/>
+<p><b>Consistent transitions (polish pass).</b> Previously only the scene change to the Rat Shooter faded. A short <b>fade from black</b> (0.5&ndash;0.6 s, smoothstep, unscaled time) now plays whenever a mission, the tutorial or an archery or parachute run starts and on every return to the menu, and the results screens <b>fade in</b> over 0.5 s. The fade clock starts on the first frame actually drawn: the first test showed that building the Parachute island took longer than the fade, which was used up before anything appeared ([[f-fade]], [[f-resfade]]).</p>
 <div class="grid3">
 <figure id="f-fade"><img src="../img/r/new__pfade_start.jpg"><figcaption>Parachute start, first frame: black (mean brightness 3.0 of 255).</figcaption></figure>
-<figure><img src="../img/r/new__pfade_mid.jpg"><figcaption>0.25 s later: the island scene fading in (brightness 48.1).</figcaption></figure>
-<figure><img src="../img/r/new__pfade_end.jpg"><figcaption>1.0 s: transition complete (brightness 128.3).</figcaption></figure>
-</div>
-<div class="sidebyside">
+<figure><img src="../img/r/new__pfade_mid.jpg"><figcaption>0.25 s later: the island fading in (48.1); complete at 1.0 s (128.3).</figcaption></figure>
 <figure id="f-resfade"><img src="../img/r/new__res_mid.jpg"><figcaption>Archery results 0.2 s after the run ended: the panel is still partly transparent.</figcaption></figure>
-<figure><img src="../img/r/new__07_results.jpg"><figcaption>The same screen after the 0.5 s fade-in.</figcaption></figure>
 </div>
 
 <h2>Gameplay HUDs of the Four Modes</h2>
@@ -75,37 +80,23 @@
 <tr><td><b>Parachute</b></td><td>Phase (IN THE PLANE, FREE FALL, DEPLOYING, CANOPY, LANDED) and timer; altimeter with an altitude tape that marks the deploy window, the &ldquo;pull now&rdquo; warning band and the auto-deploy line; vertical speed and ground speed; speed-control gauge; parachute state; rings and coins collected; landing-pad radar with distance; large <b>OPEN PARACHUTE</b> prompt that appears only inside the deploy window and blinks red below the warning altitude</td></tr>
 <tr><td><b>Rat Shooter</b></td><td>Level, time left and mice remaining; score with combo; ammunition with a reload animation; headshot and combo call-outs; countdown; level-clear summary with time, ammo and accuracy bonuses and 1&ndash;3 stars; best score with a NEW! tag</td></tr>
 </table>
-<div class="grid2">
+<div class="grid3">
 <figure><img src="../img/r/new__10_shooter.jpg"><figcaption>Shooter HUD at the start of wave 1 (27 Nov 2026).</figcaption></figure>
-<figure><img src="../img/r/shooter__04_aim_down_sights.jpg"><figcaption>Shooter: aiming down sights with the plasma rifle.</figcaption></figure>
+<figure id="f-guide-partial"><img src="../img/r/new__archery_guide_zoom_partial.jpg"><figcaption>Archery trajectory guide at 69&nbsp;% draw (enlarged crop).</figcaption></figure>
 <figure><img src="../img/r/archery__04_bullseye_streak.jpg"><figcaption>Archery: bullseye with streak multiplier and the wind panel.</figcaption></figure>
 <figure><img src="../img/r/parachute__08_open_parachute_button.jpg"><figcaption>Parachute: the OPEN PARACHUTE prompt inside the deploy window.</figcaption></figure>
 <figure><img src="../img/r/rat_shooter__04_gameplay_hud.jpg"><figcaption>Rat Shooter HUD: level, timer, mice left, score and ammunition.</figcaption></figure>
-<figure><img src="../img/r/rat_shooter__10_level_clear_stars.jpg"><figcaption>Rat Shooter level-clear summary with bonuses and stars.</figcaption></figure>
+<figure id="f-guide-full"><img src="../img/r/new__archery_guide_zoom_full.jpg"><figcaption>The guide at full draw: a flatter, faster arc.</figcaption></figure>
 </div>
 
 <h3>Archery trajectory guide</h3>
 <p>The archery interface had no way to show how draw strength, gravity and wind shape a shot. The new guide is a dotted cyan arc that appears once the bow is drawn past 12&nbsp;%, fades in with the draw and brightens at full draw. It is computed every frame by <code>Arrow.Predict</code>, which runs <i>exactly</i> the same integration as a real arrow (gravity, quadratic drag, the current round's wind and swept raycasts against the range), so the arc ends where the arrow would actually land (Section 9.2). Each dash is 40 ms of flight. On the desktop the arrow is launched from the eye, which would make the true path an end-on dot under the crosshair, so the guide starts at the tip of the nocked arrow and blends onto the predicted path with a (1&minus;<i>t</i>)<sup>2</sup> weight; the far end, including the predicted impact point, is unchanged. The far end is drawn at reduced opacity, so reading the exact impact remains part of the skill.</p>
-<div class="sidebyside">
-<figure id="f-guide-partial"><img src="../img/r/new__archery_guide_zoom_partial.jpg"><figcaption>Trajectory guide at 69&nbsp;% draw (enlarged crop of a 1280&times;720 Game-view capture).</figcaption></figure>
-<figure id="f-guide-full"><img src="../img/r/new__archery_guide_zoom_full.jpg"><figcaption>Trajectory guide at full draw: a flatter, faster arc.</figcaption></figure>
-</div>
 
 <h2>Pause, Results and Game-Over Screens</h2>
-<p>The pause menu (Esc, or the VR menu button) freezes time and offers Resume, How to Play, Settings, Restart (or Skip Tutorial), Switch Mode, Main Menu and Quit. The shooter's game-over screen animates in over about a second and has three tabs: a summary (score, wave, kills, accuracy, headshots, new-high-score banner), analytics (a damage heat-map of the arena and a kills-per-wave chart) and the local leaderboard. The archery and parachute results screens show the score, a NEW HIGH SCORE! banner when the best is beaten, a per-round or per-phase breakdown, PLAY AGAIN and MAIN MENU, and the mode cards for a quick switch.</p>
-<div class="grid3">
-<figure><img src="../img/r/shooter__19_game_over_summary.jpg"><figcaption>Shooter game over: summary tab.</figcaption></figure>
-<figure><img src="../img/r/shooter__20_game_over_analytics.jpg"><figcaption>Game over: analytics tab with heat-map.</figcaption></figure>
-<figure><img src="../img/r/parachute__14_results.jpg"><figcaption>Parachute results with landing accuracy.</figcaption></figure>
-</div>
+<p>The pause menu (Esc, or the VR menu button) freezes time and offers Resume, How to Play, Settings, Restart (or Skip Tutorial), Switch Mode, Main Menu and Quit. The shooter's game-over screen has summary, analytics (damage heat-map, kills per wave) and leaderboard tabs; the archery and parachute results show the score, a NEW HIGH SCORE! banner, a breakdown, PLAY AGAIN, MAIN MENU and the mode cards.</p>
 
 <h2>Tutorial, Help and Settings</h2>
 <p>First-time players are taken through an eight-step interactive tutorial; each step states a goal (look around, move, sprint and jump, shoot the targets, reload, aim down sights, throw a grenade, collect a power-up) and advances only when the player has done it. F1 toggles a help overlay with the controls of the current mode, F3 an FPS counter and F4 a performance overlay. The settings screen has six tabs: gameplay (mouse sensitivity, field of view, screen shake, invert-Y, tutorial replay), graphics (post-processing, VSync, bloom intensity, FPS counter, full screen), audio (master and music volume, HRTF spatial audio), controls (rebinding of all 15 actions), VR comfort (vignette on/off and strength, snap or smooth turning with angle or speed, seated mode, hand tracking, haptics, mixed reality) and language (English, Spanish, French and German through the <code>Loc</code> table).</p>
-<div class="grid3">
-<figure><img src="../img/r/tutorial__03_shoot_targets.jpg"><figcaption>Tutorial step: shoot the targets.</figcaption></figure>
-<figure><img src="../img/r/menus__06_settings_controls_rebinding.jpg"><figcaption>Settings: key rebinding.</figcaption></figure>
-<figure><img src="../img/r/menus__07_settings_vr_comfort.jpg"><figcaption>Settings: VR comfort tab.</figcaption></figure>
-</div>
 
 <h2>Controls for Every Input Method</h2>
 <p>Every device writes into the same <code>PlayerInputState</code> (Chapter 4), so the controls in [[t-controls]] drive identical gameplay code. Keyboard bindings are the defaults and can be changed in the settings.</p>
@@ -127,20 +118,16 @@
 </table>
 
 <h2>VR User Interface</h2>
-<p>In VR, IMGUI cannot be seen inside the headset, so <code>VRMenu</code> draws the same menu as a world-space panel in front of the player, and <code>VRMenuDriver</code> casts a laser from the right controller (ray-casting selection [28]); the trigger clicks the highlighted button. During play a wrist display on the left hand shows health, ammunition, wave and score (mini-game modes put their own read-out there), so no head-locked HUD is needed. The VR menu was exercised end to end with the OpenXR Mock Runtime (Chapter 5) ([[f-vr-menu]]).</p>
-<div class="sidebyside">
-<figure id="f-vr-menu"><img src="../img/r/vr__vr_01_menu_pointer.jpg"><figcaption>World-space VR menu operated with the controller laser pointer (OpenXR Mock Runtime).</figcaption></figure>
-<figure><img src="../img/r/vr__vr_14_archery_aim.jpg"><figcaption>VR archery: the bow is held in the tracked hand.</figcaption></figure>
-</div>
+<p>In VR, IMGUI cannot be seen inside the headset, so <code>VRMenu</code> draws the same menu as a world-space panel in front of the player, and <code>VRMenuDriver</code> casts a laser from the right controller (ray-casting selection [28]); the trigger clicks the highlighted button. During play a wrist display on the left hand shows health, ammunition, wave and score (mini-game modes put their own read-out there), so no head-locked HUD is needed. The VR menu was exercised end to end with the OpenXR Mock Runtime ([[f-vr-grid]] (a), Chapter 5).</p>
 
 <h2>Heuristic Usability Review</h2>
-<p>The interface was reviewed against Nielsen's ten usability heuristics [30]. [[t-heuristics]] lists how the project addresses each one; the review was done by the two authors, not by external users, so it is an expert review rather than a user study (Chapter 14).</p>
+<p>The interface was reviewed against Nielsen's ten usability heuristics [30]. [[t-heuristics]] lists how the project addresses each one; the review was done by the two authors, not by external users, so it is an expert review rather than a user study ([[s-future]]).</p>
 <table data-cap="Review of the interface against Nielsen's usability heuristics" id="t-heuristics" class="compact">
 <tr><th style="width:28%">Heuristic</th><th>How NEON BREACH addresses it</th></tr>
 <tr><td>Visibility of system status</td><td>Persistent HUD values; draw meter, reload bar, altitude tape and deploy window; trajectory guide while drawing</td></tr>
 <tr><td>Match with the real world</td><td>Metres, m/s and km/h; physically based arrows and free fall; familiar shooter conventions</td></tr>
-<tr><td>User control and freedom</td><td>Pause, restart, switch mode and main menu from every mode; skip tutorial; F5&ndash;F7 hot-keys</td></tr>
-<tr><td>Consistency and standards</td><td>One button style, one panel style, one fade transition and one HUD grid in every mode</td></tr>
+<tr><td>User control and freedom</td><td>Skip the intro at any moment; pause, restart, switch mode and main menu from every mode; skip tutorial; F5&ndash;F7 hot-keys</td></tr>
+<tr><td>Consistency and standards</td><td>One button style, one panel style, one fade transition and one HUD grid in every mode; the intro uses the menu title's cyan/magenta identity and hands over through the HUD's own fade</td></tr>
 <tr><td>Error prevention</td><td>Confirmation before resetting statistics; deploy prompt and auto-deploy safety in Parachute</td></tr>
 <tr><td>Recognition rather than recall</td><td>Bound keys printed in the hint line of every phase; mode cards show hot-keys</td></tr>
 <tr><td>Flexibility and efficiency</td><td>Key rebinding, hot-keys, four input methods, quick restart</td></tr>

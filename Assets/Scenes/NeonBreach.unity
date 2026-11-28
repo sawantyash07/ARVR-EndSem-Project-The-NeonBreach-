@@ -9431,6 +9431,10 @@ MonoBehaviour:
   shieldRegenDelay: 4
   shieldRegenRate: 25
   maxStamina: 100
+  FovOverride: 0
+  AimOffset: {x: 0, y: 0}
+  LookScale: 1
+  BlockSprint: 0
   Kills: 0
 --- !u!114 &855326408
 MonoBehaviour:
@@ -9445,6 +9449,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::NeonBreach.VRRig
   forceDesktop: 0
+  WristOverride: 
 --- !u!4 &855326409
 Transform:
   m_ObjectHideFlags: 0
@@ -9908,6 +9913,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::NeonBreach.HUD
   showHelp: 0
   newHighScore: 0
+  showPerf: 0
 --- !u!114 &908099426
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -19621,6 +19627,161 @@ MeshFilter:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1895305723}
   m_Mesh: {fileID: 10202, guid: 0000000000000000e000000000000000, type: 0}
+--- !u!1 &1904611019
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1904611021}
+  - component: {fileID: 1904611020}
+  m_Layer: 0
+  m_Name: Cinematic Intro
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1904611020
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1904611019}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 760f89be1ec042145b640cf3936db554, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::NeonBreach.CinematicIntro
+  playIntro: 1
+  oncePerLaunch: 1
+  allowSkip: 1
+  skipButtonDelay: 0.6
+  skipInVR: 1
+  fadeInDuration: 1
+  closedHoldDuration: 1.4
+  curtainOpenDuration: 3.6
+  curtainOpenCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 0.35
+      value: 0.3
+      inSlope: 1.45
+      outSlope: 1.45
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  titleRevealDelay: 1.1
+  titleRevealDuration: 2.2
+  titleRevealCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 2.4
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    - serializedVersion: 3
+      time: 1
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0
+      outWeight: 0
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  titleHoldDuration: 2.4
+  outroFadeDuration: 1.2
+  menuFadeInDuration: 0.8
+  skipFadeDuration: 0.45
+  curtainColor: {r: 0.46, g: 0.03, b: 0.08, a: 1}
+  curtainTrimColor: {r: 1, g: 0.22, b: 0.64, a: 1}
+  curtainStackWidth: 0.13
+  curtainFolds: 14
+  curtainSway: 1
+  welcomeText: WELCOME TO
+  titleText: NEON BREACH
+  taglineText: "SHOOTER   \xB7   ARCHERY   \xB7   PARACHUTE   \xB7   RAT SHOOTER"
+  titleFont: {fileID: 0}
+  osFontNames:
+  - Bahnschrift
+  - Century Gothic
+  - Segoe UI
+  - Arial
+  neonCyan: {r: 0.15, g: 0.92, b: 1, a: 1}
+  neonMagenta: {r: 1, g: 0.2, b: 0.7, a: 1}
+  titleSize: 150
+  welcomeSize: 44
+  titleStartScale: 0.86
+  titleHoldZoom: 1.035
+  titleSpacingStart: 42
+  titleSpacingEnd: 14
+  welcomeSpacingStart: 64
+  welcomeSpacingEnd: 24
+  neonFlicker: 1
+  glowIntensity: 1
+  masterVolume: 1
+  musicVolume: 0.7
+  ambienceVolume: 0.35
+  curtainSfxVolume: 0.8
+  revealSfxVolume: 0.85
+  followGameMusicVolume: 1
+  musicClip: {fileID: 0}
+  ambienceClip: {fileID: 0}
+  curtainClip: {fileID: 0}
+  revealClip: {fileID: 0}
+  customRevealHitTime: 0
+  vignetteStrength: 0.85
+  filmGrain: 0.35
+  dustMotes: 36
+--- !u!4 &1904611021
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1904611019}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1916786895
 GameObject:
   m_ObjectHideFlags: 0
@@ -22135,3 +22296,4 @@ SceneRoots:
   - {fileID: 1916786896}
   - {fileID: 855326409}
   - {fileID: 908099428}
+  - {fileID: 1904611021}

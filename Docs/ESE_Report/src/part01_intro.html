@@ -2,7 +2,6 @@
 
 <h2>Background</h2>
 <p>Virtual reality (VR) places the user inside a computer-generated world. A head-mounted display (HMD) renders a separate image for each eye, and a tracking system measures where the head and hands are, so that the image changes exactly as the user moves. Augmented and mixed reality (AR/MR) keep the real world visible and register virtual content to it. Since 2019 the industry has converged on <b>OpenXR</b>, a royalty-free standard from the Khronos Group, which lets one application run on headsets from Meta, Valve, HTC, Microsoft and others. Consumer standalone headsets such as the Meta Quest 3 combine inside-out 6DoF tracking, controller-free hand tracking and colour passthrough cameras, so the same device supports both VR and MR.</p>
-<p>Building a good XR application involves more than placing a camera in a 3D scene. The frame rate must stay at the display's refresh rate (72&ndash;120 Hz), because dropped frames and artificial motion cause <i>cybersickness</i>. Input must work with whatever the user holds, or with bare hands. Interfaces must exist in 3D space, because a flat 2D overlay does not work inside a headset. Sound must be spatialised so that the user can locate threats, and in MR the virtual content must be registered to the real room.</p>
 
 <h2>Project Overview</h2>
 <p><b>NEON BREACH</b> is a Unity 6 project that implements these requirements in a set of games that share one technical foundation. The project has <b>four game modes</b>, all started from one main menu. The main scene contains three of them (Shooter, Archery and Parachute), which the player can switch between at any time; the fourth, <i>Rat Shooter</i>, lives in its own scene and is loaded from the menu. A bonus <i>Farm Sniper</i> level is a further standalone scene opened from the Editor's <i>Neon Breach</i> menu. All of them reuse the same input, audio and settings systems. [[t-games]] summarises the games and [[f-games]] shows them running.</p>
@@ -26,50 +25,40 @@
 </div>
 <figure id="f-games" style="margin-top:-3mm"><figcaption>The four game modes, the bonus Farm Sniper scene and the VR view, all captured from the running project (Unity 6000.5.5f1, Play mode, 1920&times;1080). The VR frame was rendered through the real OpenXR pipeline with the OpenXR Mock Runtime (see Chapter 5).</figcaption></figure>
 
-<h2>Platforms and Play Modes</h2>
-<ul>
-<li><b>Desktop (Windows):</b> keyboard and mouse with fully rebindable keys, or a gamepad; an immediate-mode GUI HUD.</li>
-<li><b>Local co-op:</b> two players in split screen (player 1 on keyboard and mouse, player 2 on a gamepad), each with a separate camera viewport and HUD.</li>
-<li><b>PC VR through OpenXR:</b> any OpenXR runtime (Meta Quest Link, SteamVR, Windows Mixed Reality) with Oculus/Meta Touch, Valve Index or HTC Vive controllers, or controller-free hand tracking.</li>
-<li><b>Meta Quest mixed reality:</b> an Android build with passthrough, in which the arena is hidden and enemies spawn along the player's real room boundary.</li>
-</ul>
-<p>The game decides the mode at runtime. If an OpenXR head device is present, the VR rig activates; otherwise the same scene plays on the desktop. No separate VR build or scene is needed.</p>
-
-<figure id="f-editor"><img src="../img/r/ed__unity_editor_full.png"><figcaption>The project open in the Unity 6 Editor: the NeonBreach scene hierarchy (left), the generated neon arena in the Scene view (centre), the Player's components in the Inspector (right) and the project's own <i>Neon Breach</i> menu in the menu bar.</figcaption></figure>
 
 <h2>Key Contributions</h2>
 <ol>
-<li><b>One input abstraction for four input methods.</b> Keyboard and mouse, gamepad, OpenXR controllers and XR Hands gestures all fill one <code>PlayerInputState</code>, so every game mode works on every device without device-specific gameplay code.</li>
+<li><b>One input abstraction for four input methods.</b> Keyboard and mouse, gamepad, OpenXR controllers and XR Hands gestures all fill one <code>PlayerInputState</code>, so every game mode works on every device without device-specific gameplay code. The same scene runs on the desktop, in local split-screen co-op, on PC VR through OpenXR and as mixed reality on a Meta Quest; the VR rig activates by itself when a headset is present.</li>
 <li><b>VR comfort by design.</b> A tunnelling vignette driven by speed and turn rate, snap turns with a blink, rotation about the head, seated-mode height calibration, room-scale head following and no camera shake in VR.</li>
 <li><b>Mixed-reality breach mode.</b> The real play-area boundary becomes invisible walls, enemy spawn points and a runtime NavMesh, so virtual enemies move through the user's real room.</li>
 <li><b>A custom binaural spatializer.</b> Interaural time difference (Woodworth model), level difference and head-shadow low-pass filtering, implemented in an audio-thread DSP filter.</li>
 <li><b>Physically based mini-games.</b> Arrow ballistics with quadratic drag and wind, and skydiving with body-position-dependent terminal velocity, canopy flight and flare.</li>
 <li><b>Fully procedural content.</b> Every model, texture, material, sound, music loop and level is generated in C#; the repository contains no imported art or audio.</li>
 <li><b>Measured performance.</b> Every mode runs at 2.5&ndash;3.3 ms per frame on the development PC, well inside a 90 Hz VR budget, after measured optimisations such as GPU instancing and removing shadows from emissive parts.</li>
+<li><b>A cinematic startup intro.</b> Theatre curtains drawn as a deformable cloth mesh open on a neon stage, the title ignites like a neon tube and procedurally synthesised music and effects play, before the intro hands over to the unchanged main menu.</li>
 </ol>
 
 <h2>Improvements Made During the ESE Audit</h2>
-<p>As the task required, the whole project was inspected against the ten evaluation criteria before this report was written. Four gaps were found; each was fixed and re-verified before it is documented as working ([[t-gaps]]).</p>
-<table data-cap="Gaps found during the ESE audit and the improvements made" id="t-gaps">
-<tr><th style="width:24%">Gap found</th><th style="width:15%">Criteria affected</th><th>Improvement implemented and verification</th></tr>
-<tr><td>The XR loader list was empty and every OpenXR feature was disabled, so VR could not start until the user ran a manual set-up step</td><td>4, 5, 8</td><td>Created the XR settings and ran the project's own <i>Configure OpenXR features</i> tool: OpenXR is the loader, with 5 controller profiles, Hand Tracking Subsystem and Meta Hand Tracking Aim enabled. OpenXR project validation: 0 issues ([[ch5]]).</td></tr>
-<tr><td>XR Project Validation warned that <i>Run In Background</i> was off, which causes head-locked rendering when the headset's system menu takes focus</td><td>4, 9</td><td>Enabled <code>PlayerSettings.runInBackground</code>; validation now reports 0 issues in 12 checks ([[f-xr-validation]]).</td></tr>
-<tr><td>Number keys 1&ndash;9 mapped to the wrong Input System keys (1/2/3 &rarr; Shift/Shift/Alt), breaking weapon selection and shop quick-buy</td><td>7, 9</td><td>Fixed the key mapping in <code>DesktopInput.ToKey</code>; keys 2, 3 and 1 verified to select the rifle, the scatter cannon and the pistol ([[ch10]]).</td></tr>
-<tr><td>In VR, switching modes logged "Cannot set field of view on camera &hellip; while VR is enabled"</td><td>4, 8</td><td>Added <code>Util.SetFov</code>, which skips FOV writes while the camera renders in stereo; VR mode switching now produces 0 warnings, and the desktop sprint FOV still changes from 87&deg; to 94&deg;.</td></tr>
-</table>
+<p>As the task required, the whole project was inspected against the ten evaluation criteria before this report was written. Four gaps were found; each was fixed and re-verified before it is documented as working:</p>
+<ul id="t-gaps">
+<li><b>XR loader not enabled</b> (criteria 4, 5, 8): the loader list was empty and every OpenXR feature disabled. The project's <i>Configure OpenXR features</i> tool now sets OpenXR as the loader with 5 controller profiles and hand tracking; OpenXR validation reports 0 issues ([[ch5]]).</li>
+<li><b>Run In Background off</b> (4, 9): enabled, so XR Project Validation reports 0 issues in 12 checks ([[f-xr-validation]]).</li>
+<li><b>Number keys mapped wrongly</b> (7, 9): 1/2/3 were read as Shift/Shift/Alt; <code>DesktopInput.ToKey</code> fixed and keys 2, 3, 1 verified to select the rifle, scatter cannon and pistol.</li>
+<li><b>FOV warning in VR</b> (4, 8): <code>Util.SetFov</code> now skips FOV writes while the camera renders in stereo; VR mode switching gives 0 warnings.</li>
+</ul>
 <p>In addition, the VR pipeline, which previously had only been compile-checked, was <b>executed end to end</b> with Unity's OpenXR Mock Runtime. Simulated head and controller poses and button presses were injected through the OpenXR conformance-automation extension, and the resulting VR frames, haptic events and registration values were recorded ([[s-mockvr]]).</p>
 
-<h2 id="s-polish">Final Polish Pass (27 Nov 2026)</h2>
-<p>After the audit, the project was inspected once more for small improvements that would make it more polished without changing its gameplay, scenes or assets. Five changes were made ([[t-polish]]); each was compiled, played and captured in the running Editor, and two of them were corrected after the first test showed a problem (Chapter 10).</p>
-<table data-cap="Improvements made in the final polish pass" id="t-polish" class="compact">
+<h2 id="s-polish">Polish Passes (27 and 28 Nov 2026)</h2>
+<p>After the audit the project was improved in two small, verified passes that did not change its gameplay, scenes or assets ([[t-polish]]). Each change was compiled, played and captured in the running Editor; four were corrected after the first test showed a problem (Chapter 10).</p>
+<table data-cap="Improvements made in the polish passes" id="t-polish" class="compact">
 <tr><th style="width:22%">Improvement</th><th style="width:15%">Mode / area</th><th>What changed and how it was verified</th></tr>
 <tr><td>Archery trajectory guide</td><td>Archery (C7, C8)</td><td>New <code>Arrow.Predict</code> runs the arrow's exact flight model (gravity, drag, wind, raycasts); <code>ArcheryMode.UpdateGuide</code> draws it as a dotted arc from the arrow tip while the bow is drawn. Verified: 15&ndash;16 points ending on the range floor at 36&ndash;43 m; 3.1 ms per frame ([[f-guide-partial]])</td></tr>
 <tr><td>Fade transitions</td><td>All modes (C7)</td><td><code>HUD.FadeIn</code> on every mission, tutorial, mode start and return to menu. Verified frame by frame: brightness 3.0 &rarr; 48.1 &rarr; 128.3 at 0 / 0.25 / 1.0 s ([[f-fade]])</td></tr>
 <tr><td>Fading results screen</td><td>Archery, Parachute (C7)</td><td>Results fade in over 0.5 s instead of appearing at once ([[f-resfade]])</td></tr>
 <tr><td>Button hover animation</td><td>All menus (C7)</td><td>Pulsing glow and accent bar on every neon button, matching the Rat Shooter button ([[f-pause-hover]])</td></tr>
 <tr><td>Animated mode cards</td><td>Pause, results (C7)</td><td>Each mode card sits on a panel that brightens and pulses on hover ([[f-cards]])</td></tr>
+<tr><td><b>Cinematic startup intro</b> (28 Nov)</td><td>Application start (C3, C6&ndash;C10)</td><td>New <code>Assets/Scripts/Intro</code> (5 scripts): curtains open on a neon stage and reveal WELCOME TO NEON BREACH, with music, ambience and effects; skip button; hands over to the existing menu without changing it. Verified in Play mode, at 4:3, and in a Windows player build ([[s-intro]])</td></tr>
 </table>
-<p>The Shooter, Parachute and Rat Shooter already provided the feedback listed in the task (enemy hit flash and knock-back, hit markers and damage numbers, wave banners, a deployment prompt inside the deploy window, landing-accuracy scoring, mice that stop, run, change direction and flee from near misses, cartoon eliminations, weapon recoil and high scores in every mode), so their gameplay code was left unchanged to avoid risk; Chapters 8 and 9 document these features.</p>
 
 <h2>Organisation of the Report</h2>
-<p>Chapter 1 introduces the project. Chapters 2&ndash;11 each address one ESE criterion, in rubric order: problem definition and requirements (Ch. 2), literature survey (Ch. 3), system architecture and design (Ch. 4), AR/VR technology implementation (Ch. 5), tracking, registration and spatial understanding (Ch. 6), 3D modelling, assets and environment (Ch. 7), interaction and UI/UX (Ch. 8), advanced AR/VR features (Ch. 9), technical documentation (Ch. 10) and the final demonstration (Ch. 11). Chapter 12 presents results and discussion, Chapter 13 concludes and Chapter 14 describes future scope. The references follow; Appendix A lists the OpenXR Mock Runtime verification procedure and Appendix B is a screenshot gallery.</p>
+<p>Chapter 1 introduces the project. Chapters 2&ndash;11 each address one ESE criterion, in rubric order: problem definition and requirements (Ch. 2), literature survey (Ch. 3), system architecture and design (Ch. 4), AR/VR technology implementation (Ch. 5), tracking, registration and spatial understanding (Ch. 6), 3D modelling, assets and environment (Ch. 7), interaction and UI/UX (Ch. 8), advanced AR/VR features (Ch. 9), technical documentation and the project report (Ch. 10) and the final demonstration (Ch. 11). Every one of these chapters starts on a new page with the criterion's name centred at the top. Chapter 12 presents results and discussion and Chapter 13 the conclusion and future scope. The references follow.</p>
